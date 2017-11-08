@@ -1,0 +1,165 @@
+{% extends "hydrotop/base.html" %}
+{% load tethys_gizmos %}
+
+ {% if download_status %}
+
+       <p > The downloading geospatial files completed successfully. Download status = {{download_status}} </p>
+
+  {% else %}
+
+    {% block app_navigation_items %}
+      <form method="post" action="{% url 'hydrotop:model_run' %}" >
+          {% csrf_token %}
+          <b> Use your hydrologic judgement to change the model parameters of the model created, and click submit to re-run the model </b>
+          <br>
+          <br>
+
+          <u><strong>Multiplicative factors </strong></u>
+          <br>
+          <table style="width:100%">
+              <tr>
+                    <th> {% gizmo text_input fac_L %} </th>
+                    <th> {% gizmo text_input fac_Ks %} </th>
+              </tr>
+              <tr>
+                    <td>{% gizmo text_input fac_n_o %}</td>
+                    <td>{% gizmo text_input fac_n_c %}</td>
+              </tr>
+              <tr>
+                    <td>{% gizmo text_input fac_th_s %}</td>
+                    <td></td>
+              </tr>
+              </table>
+          <br> <br>
+
+          <u><strong>Initial Parameters</strong></u>
+          <br>
+              <table style="width:100%">
+              <tr>
+                    <th> {% gizmo text_input pvs_t0 %} </th>
+                    <th> {% gizmo text_input vo_t0 %} </th>
+              </tr>
+              <tr>
+                    <td>{% gizmo text_input qc_t0 %}</td>
+                    <td>{% gizmo text_input kc %}</td>
+              </tr>
+
+
+            </table>
+
+
+          <input type="submit" name="input-form" class="btn btn-default">
+          <input type="hidden" name="model_inputs_table_id_from_another_html" value= {{hs_resource_id_created}}>
+      </form>
+    {% endblock %}
+{% endif %}
+
+
+{% block app_content %}
+  <!--If the simulation is retreived from the drop down menu, the name of the sim will be:-->
+
+  <!--<h3> Test Variable: <u><b>{{test_variable}}</b></u>  </h3>-->
+  <!--<h3> Previous simulation id: <u><b>{{simulation_loaded_id}}</b></u>  </h3>-->
+  <!--<h3> Last simulation HS- ID : <u><b>{{current_model_inputs_table_id}}</b></u>  </h3>-->
+  <!--<h3> Test string: <u><b>{{test_string}}</b></u>  </h3>-->
+  <!--<h3> The_resource_id_created: <u><b>{{hs_resource_id_created}}</b></u>  </h3>-->
+
+
+  <!--If the user wants to download only  -->
+  {% if download_status %}
+
+            <h2> Congratulations! Files were created successfully! </h2>
+            <hr>
+                <p> The created geospatial and forcing files can be accessed temporarily by using this link:
+                    <a href="{{download_link}}"> Download zip here </a>  </p>
+
+                <p> The files is also saved permanantly in HydroShare, with the  ID
+                    <a href="http://www.hydroshare.org/resource/{{hs_res_downloadfile}}">{{hs_res_downloadfile}}</a></p>
+
+                <!--<p> The request is being processed. Please wait while the input files (geospatial, and forcing files) for the region selected are being created</p>-->
+                <!--<p> Test string : {{test_string}}</p>-->
+  {% endif %}
+
+
+
+
+
+  <!--if the user creates a simulation.. :TODO need to have 'and' clause for no download case in the if statement below-->
+  {% if  hs_resource_id_loaded != None %} <!--- If the input is complete --->
+    <h5>{{test_string}}</h5>
+    <h5> Congratulations!! Results successfully retreived from HydroShare resource ID: <a href="http://www.hydroshare.org/resource/{{hs_resource_id_loaded}}"> {{hs_resource_id_loaded}} </a>   </h5>
+
+            <!--Using the calibratoin parameters provided, the graph was updated for the ll-input id: {{Iwillgiveyou_model_inputs_table_id_from_another_html}}-->
+
+            {% gizmo plot_view observed_hydrograph_loaded3 %} <br><br><br><br>
+            <!--{% gizmo plot_view observed_hydrograph_loaded %} <br><br><br><br>-->
+            <!--{% gizmo plot_view observed_hydrograph_loaded2 %} <br><br><br><br>-->
+        {% gizmo plot_view ppt_ts_obj_loaded %} <br><br><br><br>
+        {% gizmo plot_view eta_ts_obj_loaded %} <br><br><br><br>
+        {% gizmo plot_view vs_ts_obj_loaded %} <br> <br><br><br>
+        {% gizmo plot_view vc_ts_obj_loaded %} <br><br><br><br>
+        {% gizmo plot_view vo_ts_obj_loaded %} <br><br><br><br>
+        {% gizmo plot_view vol_bal_graphs_loaded %} <br><br><br><br>
+
+   {% endif %}
+
+
+
+   <!--If user loads the simulation from HydroShare or dropdown menu-->
+   {% if  hs_resource_id_prepared != None and download_status != True %}
+
+        <h6> PyTOPKAPI simualation- {{simulation_name}} ran successfully!  </h6>
+        <h7> Results saved in HydroShare with resource ID:
+            <a href="http://www.hydroshare.org/resource/{{hs_resource_id_created}}"> {{hs_resource_id_created}}</a></h7>
+
+         Here is the simulated discharge for the outlet chosen
+        <br>
+
+
+
+        {% gizmo plot_view observed_hydrograph3 %}  <br><br><br><br>
+        <!--{% gizmo plot_view observed_hydrograph %}-->
+        <!--{% gizmo plot_view observed_hydrograph2 %}-->
+
+        {% gizmo plot_view ppt_ts_obj %} <br><br><br><br>
+
+        {% gizmo plot_view vs_ts_obj %} <br><br><br><br>
+        {% gizmo plot_view vc_ts_obj %} <br><br><br><br>
+        {% gizmo plot_view vo_ts_obj %} <br><br><br><br>
+        {% gizmo plot_view eta_ts_obj %} <br><br><br><br>
+        {% gizmo plot_view vol_bal_graphs %} <br><br><br><br>
+
+
+   {% endif %}
+
+
+
+
+  <!--if the user modifies a loaded simulation.. -->
+  {% if fac_L_form != "" %} <!--- If the input is complete --->
+      <h5> Congratulations <b>{{user_name}}</b>! Parameters were changed successfully!  </h5>
+      <!--<h7> Modified Results saved in HydroShare with resource ID: <a href="www.hydroshare.org/resource/{{hs_resource_id_created}}"> {{hs_resource_id_created}} </a> </h7>-->
+
+            Using the calibratoin parameters provided, the graph was updated for the ll-input id: {{Iwillgiveyou_model_inputs_table_id_from_another_html}}
+
+            {% gizmo plot_view observed_hydrograph_userModified3 %} <br><br><br><br>
+            <!--{% gizmo plot_view observed_hydrograph_userModified %}-->
+            <!--{% gizmo plot_view observed_hydrograph_userModified2 %}-->
+        {% gizmo plot_view ppt_ts_obj_modified %} <br><br><br><br>
+        {% gizmo plot_view vs_ts_obj_modified %} <br><br><br><br>
+        {% gizmo plot_view vc_ts_obj_modified %} <br><br><br><br>
+        {% gizmo plot_view vo_ts_obj_modified %} <br><br><br><br>
+        {% gizmo plot_view eta_ts_obj_modified %} <br><br><br><br>
+        {% gizmo plot_view vol_bal_graphs_userModified %} <br><br><br><br>
+
+   {% endif %}
+
+
+
+{% endblock %}
+
+
+
+{% block app_actions %}
+  <a href="{% url 'hydrotop:model_input' %}" class="btn btn-default">Back</a>
+{% endblock %}

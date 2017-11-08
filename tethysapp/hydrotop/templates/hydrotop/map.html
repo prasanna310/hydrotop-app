@@ -1,0 +1,36 @@
+{% extends "hydrotop/base.html" %}
+
+{% load tethys_gizmos %}
+
+{% block app_navigation_items %}
+  <li class="title">Gages</li>
+  <li{% if not gage_id %} class="active"{% endif %}>
+    <a href="{% url 'hydrotop:map' %}">All Gages</a>
+  </li>
+  <li{% if gage_id == '1' %} class="active"{% endif %}>
+    <a href="{% url 'hydrotop:map_single' id=1 %}">Stream Gage 1</a>
+  </li>
+  <li{% if gage_id == '2' %} class="active"{% endif %}>
+    <a href="{% url 'hydrotop:map_single' id=2 %}">Stream Gage 2</a>
+  </li>
+  <li{% if gage_id == '3' %} class="active"{% endif %}>
+    <a href="{% url 'hydrotop:map_single' id=3 %}">Stream Gage 3</a>
+  </li>
+  <li{% if gage_id == '4' %} class="active"{% endif %}>
+    <a href="{% url 'hydrotop:map_single' id=4 %}">Stream Gage 4</a>
+  </li>
+{% endblock %}
+
+{% block app_content %}
+  {% if gage_id %}
+    <h1>Stream Gage {{gage_id}}</h1>
+  {% else %}
+    <h1>Stream Gages</h1>
+  {% endif %}
+
+  {% gizmo map_view map_options %}
+{% endblock %}
+
+{% block app_actions %}
+  <a href="{% url 'hydrotop:home' %}" class="btn btn-default">Back</a>
+{% endblock %}

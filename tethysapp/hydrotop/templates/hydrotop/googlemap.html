@@ -1,0 +1,95 @@
+{% extends "hydrotop/base.html" %}
+{% block app_content %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trying google maps</title>
+
+    <style> #mymap {width:90%; height:600px;} </style>
+      <script async defer
+              src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJVwfz-TJWiZCvLmgYHv2yHYc8vagp7V0&callback=initMap"
+              type="text/javascript"></script>
+
+    <script>
+        function  init() {
+            var mapDiv = document.getElementById("mymap");
+            var mapCenter = new google.maps.LatLng(41.74, -111.9);
+            var mapOptions = {
+                center: mapCenter,
+                zoom:7,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+            var map = new google.maps.Map(mapDiv, mapOptions);
+
+            var marker = new google.maps.Marker({
+                map:map,
+                position: mapCenter,
+                draggable:true,
+                label:"Outlet"
+            });
+
+            var rectangle = new google.maps.Rectangle({
+                map: map,
+                bounds: new google.maps.LatLngBounds (
+                        new google.maps.LatLng(42,-112),
+                        new google.maps.LatLng(41.7,-111.5)
+                ),
+                fillColor:"green",
+                strokeColor:"red",
+                editable:true,
+                draggable:true
+            });
+
+            google.maps.event.addListener(rectangle, "bounds_changed", function(){
+                document.forms["xy_bounds_outlet"]["xyxy_box"].value= rectangle.getBounds();
+
+                if (document.forms["xy_bounds_outlet"]["xyxy_box"].value > 0
+                        && document.forms["xy_bounds_outlet"]["xyxy_box"].value > 0 )
+                  {
+                      document.getElementById('xy_bounds_outlet').submit();
+                  }
+
+
+            });
+
+            google.maps.event.addListener(marker, "dragend", function(event){
+                document.forms["xy_bounds_outlet"]["xy_outlet"].value= this.getPosition() ;
+
+                  if (document.forms["xy_bounds_outlet"]["xyxy_box"].value != ""
+                        && document.forms["xy_bounds_outlet"]["xyxy_box"].value != ""   )
+                  {
+                      document.getElementById('xy_bounds_outlet').submit();
+                  }
+            });
+
+        }
+        window.onload = init;
+
+    </script>
+
+
+
+</head>
+<body>
+    <h5>  Specify the outlet and the bounding box hat completely contains the watershed</h5>
+    <div id="mymap"></div>
+    <div id="info"></div>
+    <div id="bounds_form">
+
+        <form id = "xy_bounds_outlet" action="{% url 'hydrotop:model_input' %}">
+          These will be hidden:  {{xy_bounds_outlet}} <br>
+
+          <input type="text" name="xyxy_box" value= "">
+          <input type="text" name="xy_outlet" value= "">
+
+        </form>
+
+
+    </div>
+
+
+</body>
+</html>
+
+{% endblock %}
