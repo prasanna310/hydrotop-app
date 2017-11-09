@@ -1,13 +1,14 @@
 {% extends "hydrotop/base.html" %}
 {% load tethys_gizmos %}
 
- {% if download_status %}
 
-       <p > The downloading geospatial files completed successfully. Download status = {{download_status}} </p>
-
-  {% else %}
 
     {% block app_navigation_items %}
+         {% if model_engine_chosen != 'TOPKAPI' %}
+            <p>  Process completed. </p>
+
+          {% else %}
+
       <form method="post" action="{% url 'hydrotop:model_run' %}" >
           {% csrf_token %}
           <b> Use your hydrologic judgement to change the model parameters of the model created, and click submit to re-run the model </b>
@@ -51,19 +52,13 @@
           <input type="submit" name="input-form" class="btn btn-default">
           <input type="hidden" name="model_inputs_table_id_from_another_html" value= {{hs_resource_id_created}}>
       </form>
-    {% endblock %}
 {% endif %}
+
+{% endblock %}
+
 
 
 {% block app_content %}
-  <!--If the simulation is retreived from the drop down menu, the name of the sim will be:-->
-
-  <!--<h3> Test Variable: <u><b>{{test_variable}}</b></u>  </h3>-->
-  <!--<h3> Previous simulation id: <u><b>{{simulation_loaded_id}}</b></u>  </h3>-->
-  <!--<h3> Last simulation HS- ID : <u><b>{{current_model_inputs_table_id}}</b></u>  </h3>-->
-  <!--<h3> Test string: <u><b>{{test_string}}</b></u>  </h3>-->
-  <!--<h3> The_resource_id_created: <u><b>{{hs_resource_id_created}}</b></u>  </h3>-->
-
 
   <!--If the user wants to download only  -->
   {% if download_status %}

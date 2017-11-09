@@ -54,7 +54,7 @@ def model_input(request):
     simulation_names_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
 
     # # intials
-    watershed_name = 'SantaCruz'  # 'RBC' , 'Santa Cruz', 'Barrow Creeks', 'Plunge' , Logan
+    watershed_name = 'Logan'  # 'RBC' , 'Santa Cruz', 'Barrow Creeks', 'Plunge' , Logan
     initials = {
 
         'Logan': {'simulation_name': 'Logan_sample', 'USGS_gage': '10109000', 'cell_size': '300', 't0': '10-01-2010',
@@ -328,6 +328,7 @@ def model_run(request):
     hs_res_created = download_response['hs_res_created'] = ''
     files_created_dict = 'No dict created'
     download_choice = []
+    model_engine_chosen = None
 
     # initial values
     fac_L_init = fac_Ks_init = fac_n_o_init = fac_n_c_init = fac_th_s_init = 1.0
@@ -402,26 +403,38 @@ def model_run(request):
 
             inputs_dictionary = app_utils.create_model_input_dict_from_request(request)
 
-            download_request_response = {
-                u'output_response_txt': u'http://129.123.9.159:20199/files/data/user_6/metadata.txt',
-                u'output_zipfile': u'http://129.123.9.159:20199/files/data/user_6/output.zip',
-                u'output_json_string': {'hs_res_id_created': '12456'}}
+            json_data = { u'output_response_txt': u'http://129.123.9.159:20199/files/data/user_6/eg-metadata.txt',
+                          u'output_zipfile': u'http://129.123.9.159:20199/files/data/user_6/eg-output.zip',
+                          u'output_json_string': {'hs_res_id_created': 'egresid123456'} }
 
-            download_request_response = app_utils.download_geospatial_and_forcing_files(inputs_dictionary,
-                                                                                        download_request=download_choice)
+            json_data = app_utils.download_geospatial_and_forcing_files(inputs_dictionary, download_request=download_choice)
 
             print "Downloading all the files successfully completed"
 
-            if download_request_response != {}:
+            if json_data != {}:
                 download_status = True
-                download_link = download_request_response['output_zipfile']
-                hs_res_downloadfile = download_request_response['output_json_string']['hs_res_id_created']
+                download_link = json_data['output_zipfile']
+                hs_res_downloadfile = json_data['output_json_string']['hs_res_id_created']
 
         elif model_engine_chosen.lower() == 'topnet':
             print 'User action: TOPNET'
 
             inputs_dictionary = app_utils.create_model_input_dict_from_request(request)
-            run_request = app_utils.run_topnet(inputs_dictionary)
+
+            json_data = { u'output_response_txt': u'http://129.123.9.159:20199/files/data/user_6/eg-metadata.txt',
+                          u'output_zipfile': u'http://129.123.9.159:20199/files/data/user_6/eg-output.zip',
+                          u'output_json_string': {'hs_res_id_created': 'egresid123456'} }
+
+            json_data = app_utils.run_topnet(inputs_dictionary)
+
+
+            print "Preparing TOPNET input-files completed successfully"
+
+            if json_data != {}:
+                # same output as Download files
+                download_status = True
+                download_link = json_data['download_link']
+                hs_res_downloadfile = json_data['hs_res_id_created']
 
         elif model_engine_chosen.lower() == 'topkapi':
             print 'User action: topkapi'
@@ -434,7 +447,7 @@ def model_run(request):
 
             # # Method (1), STEP (2):call_runpytopkapi function
             # response_JSON_file = '/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/e14239bf38bc490cae63e131c822a17d/pytopkpai_responseJSON.txt'
-            # response_JSON_file = '/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/a3c75f158ad44fe1a46ceb8a67224aae/pytopkpai_responseJSON.txt'
+            response_JSON_file = '/home/prasanna/tethysdev/tethysapp-hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/1b6ba76c8b5641fbb5c436b7de8a521d/pytopkpai_responseJSON.txt'
             response_JSON_file = app_utils.call_runpytopkapi(inputs_dictionary=inputs_dictionary)
 
             json_data = app_utils.read_data_from_json(response_JSON_file)
@@ -471,7 +484,7 @@ def model_run(request):
                 qc_t0_init = json_data['numeric_param']['qc_t0']
                 kc_init = json_data['numeric_param']['kc']
 
-            print '*****************', hs_resource_id_created
+            print 'hs_resource_id_created =', hs_resource_id_created
             # print [i[-1] for i in hydrograph_series_sim]
             # hydrograph_series_obs = np.nan_to_num(hydrograph_series_obs).tolist()
 
@@ -566,7 +579,7 @@ def model_run(request):
 
 
         ######### START: need to get two variables: i) hs_resource_id_created, and ii) hydrograph series ##############
-        response_JSON_file = '/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/16ea0402dd4c403bbb4e5b23ed597728/pytopkpai_responseJSON.txt'
+        response_JSON_file = '/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/1b6ba76c8b5641fbb5c436b7de8a521d/pytopkpai_responseJSON.txt'
         response_JSON_file = app_utils.loadpytopkapi(hs_res_id=hs_resource_id, out_folder='')
         json_data = app_utils.read_data_from_json(response_JSON_file)
 
@@ -704,7 +717,7 @@ def model_run(request):
         print 'MSG: Method III initiated. The model id we are looking at is: ', hs_resource_id_from_previous_simulation
 
         ######### START: need to get at leaset two variables: i) hs_resource_id_created, and ii) hydrograph series #####
-        response_JSON_file = '/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/16ea0402dd4c403bbb4e5b23ed597728/pytopkpai_responseJSON.txt'
+        response_JSON_file = '/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/1b6ba76c8b5641fbb5c436b7de8a521d/pytopkpai_responseJSON.txt'
         response_JSON_file = app_utils.modifypytopkapi(hs_res_id=hs_resource_id_created, out_folder='',
                                                        fac_l=fac_L_form, fac_ks=fac_Ks_form, fac_n_o=fac_n_o_form,
                                                        fac_n_c=fac_n_c_form, fac_th_s=fac_th_s_form,
@@ -976,6 +989,8 @@ def model_run(request):
                'download_link': download_link,
                'hs_res_created': hs_res_created,
                'dict_files_created': files_created_dict,
+
+               'model_engine_chosen':model_engine_chosen,
                }
 
     return render(request, 'hydrotop/model-run.html', context)

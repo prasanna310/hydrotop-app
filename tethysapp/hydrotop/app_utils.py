@@ -29,6 +29,13 @@ HDS = HydroDS(username=HDS_settings.USER_NAME, password=HDS_settings.PASSWORD)
 # from utils.pytopkapi_utils import *
 
 
+import zipfile
+
+def zipdir(path, ziph):
+    # ziph is zipfile handle
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file))
 
 
 def create_model_input_dict_from_request(request):
@@ -1511,9 +1518,10 @@ def run_topnet(inputs_dictionary):
     """ Subset DEM and Delineate Watershed"""
     input_static_DEM = 'nedWesternUS.tif'
     input_static_Soil_mukey = 'soil_mukey_westernUS.tif'
-    upload_lutkcfile = HDS.upload_file(os.path.join(workingDir, "lutkc.txt"))
-    # upload topnet control and watermangement files
-    upload_lutlcfile = HDS.upload_file(os.path.join(workingDir, "lutluc.txt"))
+
+    # upload_lutkcfile = HDS.upload_file(os.path.join(workingDir, "lutkc.txt"))
+    # # upload topnet control and watermangement files
+    # upload_lutlcfile = HDS.upload_file(os.path.join(workingDir, "lutluc.txt"))
 
     # leftX, topY, rightX, bottomY = -111.822, 42.128, -111.438, 41.686
     # lat_outlet = 41.744
@@ -1526,6 +1534,7 @@ def run_topnet(inputs_dictionary):
     # usgs_gage_number = '10109001'
 
     try:
+        error
         # # offline run
         subsetDEM_request = {u'output_raster': u'http://129.123.9.159:20199/files/data/user_6/LogantopnetDEM84.tif'}
         WatershedDEM = {u'output_raster': u'http://129.123.9.159:20199/files/data/user_6/LogantopnetProj30.tif'}
@@ -1805,36 +1814,37 @@ def run_topnet(inputs_dictionary):
         list_of_outfiles_dict.append(creat_latlonxyfile)
 
 
-        #get streamflow file :TODO, there seem to be some error with the function used in R
-        streamflow = HDS.download_streamflow(usgs_gage=usgs_gage_number, start_year=start_year, end_year=end_year,
-                                             output_streamflow='streamflow_calibration.dat')
-        print "streamflow = ", streamflow
-        list_of_outfiles_dict.append(streamflow)
-
-        # Trying just the attempt case
-        list_of_outfiles_dict.append(subsetDEM_request)
-        list_of_outfiles_dict.append(WatershedDEM)
-        list_of_outfiles_dict.append(outlet_shapefile_result)
-        list_of_outfiles_dict.append(project_shapefile_result)
-        list_of_outfiles_dict.append(Watershed_prod)
-        list_of_outfiles_dict.append(download_process_climatedata)
-        list_of_outfiles_dict.append(Create_Reach_Nodelink)
-        list_of_outfiles_dict.append(Create_wet_distribution)
-        list_of_outfiles_dict.append(subset_NLCD_result)
-        list_of_outfiles_dict.append(soil_data)
-        list_of_outfiles_dict.append(paramlisfile)
-        list_of_outfiles_dict.append(basinparfile)
-        list_of_outfiles_dict.append(subsetprismrainfall_request)
-        list_of_outfiles_dict.append(WatershedPRISMRainfall)
-        list_of_outfiles_dict.append(project_climate_shapefile_result)
-        list_of_outfiles_dict.append(create_rainweightfile)
-        list_of_outfiles_dict.append(creat_latlonxyfile)
+        # #get streamflow file :TODO, there seem to be some error with the function used in R
+        # streamflow = HDS.download_streamflow(usgs_gage=usgs_gage_number, start_year=start_year, end_year=end_year,
+        #                                      output_streamflow='streamflow_calibration.dat')
+        # print "streamflow = ", streamflow
         # list_of_outfiles_dict.append(streamflow)
+
+        # # Trying just the attempt case
+        # list_of_outfiles_dict.append(subsetDEM_request)
+        # list_of_outfiles_dict.append(WatershedDEM)
+        # list_of_outfiles_dict.append(outlet_shapefile_result)
+        # list_of_outfiles_dict.append(project_shapefile_result)
+        # list_of_outfiles_dict.append(Watershed_prod)
+        # list_of_outfiles_dict.append(download_process_climatedata)
+        # list_of_outfiles_dict.append(Create_Reach_Nodelink)
+        # list_of_outfiles_dict.append(Create_wet_distribution)
+        # list_of_outfiles_dict.append(subset_NLCD_result)
+        # list_of_outfiles_dict.append(soil_data)
+        # list_of_outfiles_dict.append(paramlisfile)
+        # list_of_outfiles_dict.append(basinparfile)
+        # list_of_outfiles_dict.append(subsetprismrainfall_request)
+        # list_of_outfiles_dict.append(WatershedPRISMRainfall)
+        # list_of_outfiles_dict.append(project_climate_shapefile_result)
+        # list_of_outfiles_dict.append(create_rainweightfile)
+        # list_of_outfiles_dict.append(creat_latlonxyfile)
+        # # list_of_outfiles_dict.append(streamflow)
 
 
 
     except Exception, error_returned:
         print 'Failure to complete TOPNET input-file preparation!'
+
         file = open("error_auto.html", 'w')
         file.write(str(error_returned))
 
@@ -1842,18 +1852,55 @@ def run_topnet(inputs_dictionary):
         print 'list_of_outfiles_dict=',list_of_outfiles_dict
 
 
+    # output_files_url_list  = [u'http://129.123.9.159:20199/files/data/user_6/dth2.tif', u'http://129.123.9.159:20199/files/data/user_6/f.tif', u'http://129.123.9.159:20199/files/data/user_6/psif.tif', u'http://129.123.9.159:20199/files/data/user_6/ko.tif', u'http://129.123.9.159:20199/files/data/user_6/sd.tif', u'http://129.123.9.159:20199/files/data/user_6/trans.tif', u'http://129.123.9.159:20199/files/data/user_6/dth1.tif', u'http://129.123.9.159:20199/files/data/user_6/Logantopnetparam.txt', u'http://129.123.9.159:20199/files/data/user_6/LogantopnetDEM84.tif', u'http://129.123.9.159:20199/files/data/user_6/LogantopnetProj30.tif', u'http://129.123.9.159:20199/files/data/user_6/rchproperties.txt', u'http://129.123.9.159:20199/files/data/user_6/rchlink.txt', u'http://129.123.9.159:20199/files/data/user_6/rchareas.txt', u'http://129.123.9.159:20199/files/data/user_6/nodelinks.txt']
 
     output_files_url_list = []
+    output_files_list = []
 
     for a_dict in list_of_outfiles_dict:
         files = a_dict.values()
         for a_file in files:
             output_files_url_list.append(a_file)
+            output_files_list.append(a_file.split('/')[-1])
 
-    create_hs_resources_from_hydrodslinks(list_of_hydrods_links=output_files_url_list, hs_usr_name='prasanna310', hs_paswd='Hydrology12!@')
+    print 'output_files_url_list = ', output_files_url_list
+
+    # download all the files
+    working_folder = generate_uuid_file_path()
+    out_folder = working_folder+ '/topnet-files'
+    os.makedirs(out_folder)
+    for file in output_files_url_list:
+        temp_file = out_folder + '/' + os.path.basename(file)
+        try:
+            HDS.download_file(file, temp_file)
+        except:
+            pass
+
+
+    # # zip the folder, push to HydroShare
+    zipf = zipfile.ZipFile(working_folder+'/topnet-files.zip', 'w', zipfile.ZIP_DEFLATED)
+    zipdir(working_folder, zipf)
+    zipf.close()
+
+    print ('Progress --> Zipping complete')  # working_dir
+
+    # push to HydroDS for the link
+    zipped_topnet_url = HDS.upload_file(working_folder+'/topnet-files.zip')
+    print 'zipped_topnet_url =',zipped_topnet_url
+
+    # delete the folder
+    shutil.rmtree(working_folder)
+
+    output_dict = {}
+    output_dict['download_link']= zipped_topnet_url
+    output_dict['output_files_url_list'] = output_files_url_list
+    # output_dict['output_files_list'] = output_files_list
+    output_dict['hs_res_id_created'] = 'incomplete'
+
+    # create_hs_resources_from_hydrodslinks(list_of_hydrods_links=output_files_url_list, hs_usr_name='prasanna310', hs_paswd='Hydrology12!@')
     # # :TODO either the entire process is complete or not, 1) save prepared file to HydroShare, 2) display the error, 3) display links to file
 
-    return {'error':error_returned, 'output_files':output_files_url_list }
+    return output_dict # { 'output_files_url':output_files_url_list  }
 
 def call_runpytopkapi(inputs_dictionary, out_folder=''):
     """
@@ -1895,13 +1942,11 @@ def call_runpytopkapi(inputs_dictionary, out_folder=''):
 
 
 
-
-
     # # Clip Static DEM (i.e. DEM that is in HydroDS) to the domain given & Project, and Resample it
     subsetDEM_request = HDS.subset_raster2(input_raster='nedWesternUS.tif', left=inputs_dictionary['box_leftX'],
                                            top=inputs_dictionary['box_topY'], right=inputs_dictionary['box_rightX'],
                                            bottom=inputs_dictionary['box_bottomY'], cell_size= float(inputs_dictionary['cell_size']),
-                                           output_raster= 'DEM84.tif')  # BlancoRiver
+                                           output_raster= 'DEM84.tif')
     DEM_resample_request = HDS.project_resample_raster(input_raster_url_path=subsetDEM_request['output_raster'],cell_size_dx=int(inputs_dictionary['cell_size']), cell_size_dy=int(inputs_dictionary['cell_size']), epsg_code=epsgCode, output_raster='DEM84'+str( int(inputs_dictionary['cell_size']))+'.tif', resample='bilinear')
     #DEM_resample_request = HDS.project_resample_raster(input_raster_url_path='http://129.123.9.159:20199/files/data/user_6/loganSample100m.tif',cell_size_dx=int(inputs_dictionary['cell_size']), cell_size_dy=int(inputs_dictionary['cell_size']), epsg_code=epsgCode, output_raster='DEM84'+str( int(inputs_dictionary['cell_size']))+'.tif', resample='bilinear')
 
@@ -2067,6 +2112,13 @@ def call_runpytopkapi(inputs_dictionary, out_folder=''):
     print run_model_call
 
     return out_folder + '/' + os.path.basename(responseJSON)  # ,      out_folder + '/' + os.path.basename(hydrograph_txt_file)
+
+
+
+if __name__ == '__main__':
+    zipf = zipfile.ZipFile('Python.zip', 'w', zipfile.ZIP_DEFLATED)
+    zipdir('tmp/', zipf)
+    zipf.close()
 
 
 
