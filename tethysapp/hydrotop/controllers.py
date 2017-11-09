@@ -365,7 +365,6 @@ def model_run(request):
             model_input_load_request = hs_resource_id_created = request.POST['existing_sim_res_id']
             print "MSG from II: Previous simulation is loaded.the simulation loaded from hs_res_id from text box is.", hs_resource_id_created
 
-            # chose dropdown if the field is blank. :TODO need to get rid of the except part below:
             if hs_resource_id_created == "":
                 model_input_load_request = hs_resource_id_created = request.POST['simulation_names_list']
                 print "MSG from II: Previous simulation is loaded. The name of simulation loaded is: ", hs_resource_id_created
@@ -422,8 +421,8 @@ def model_run(request):
             inputs_dictionary = app_utils.create_model_input_dict_from_request(request)
 
             json_data = { u'output_response_txt': u'http://129.123.9.159:20199/files/data/user_6/eg-metadata.txt',
-                          u'output_zipfile': u'http://129.123.9.159:20199/files/data/user_6/eg-output.zip',
-                          u'output_json_string': {'hs_res_id_created': 'egresid123456'} }
+                          u'download_link': u'http://129.123.9.159:20199/files/data/user_6/eg-output.zip',
+                          u'hs_res_id_created': '4b2e130625464232bd3a58c886eb8fc6' }
 
             json_data = app_utils.run_topnet(inputs_dictionary)
 
@@ -446,7 +445,6 @@ def model_run(request):
             print "MSG: Inputs from user read"
 
             # # Method (1), STEP (2):call_runpytopkapi function
-            # response_JSON_file = '/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/e14239bf38bc490cae63e131c822a17d/pytopkpai_responseJSON.txt'
             response_JSON_file = '/home/prasanna/tethysdev/tethysapp-hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/1b6ba76c8b5641fbb5c436b7de8a521d/pytopkpai_responseJSON.txt'
             response_JSON_file = app_utils.call_runpytopkapi(inputs_dictionary=inputs_dictionary)
 
