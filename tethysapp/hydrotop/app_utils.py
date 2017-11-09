@@ -698,6 +698,58 @@ def pull_from_hydroshare(hs_resource_id=None, output_folder=None):
     return return_dict
 
 
+def push_topnet_to_hydroshare(simulation_name=None, data_folder=None,  hs_usr_name=None, hs_password=None, hs_client_id=None, hs_client_secret=None, token=None):
+    # sys.path.append('/home/prasanna/Documents/hydroshare-jupyterhub-master/notebooks/utilities')
+    print ('Progress --> Pushing files to HydroShare. This could take a while...')
+    # from hs_restclient import HydroShare, HydroShareAuthBasic
+    #
+    # auth = HydroShareAuthBasic(username=hs_usr_name, password=hs_password)
+    # hs = HydroShare(auth=auth)
+    from hs_restclient import HydroShare, HydroShareAuthBasic, HydroShareAuthOAuth2
+    # create resource
+
+    if hs_client_id != None and hs_client_secret != None and token != None:
+        token = json.loads(token)
+        auth = HydroShareAuthOAuth2(hs_client_id, hs_client_secret, token=token)
+        hs = HydroShare(auth=auth, hostname='www.hydroshare.org')
+
+    elif hs_usr_name != None and hs_password != None:
+        auth = HydroShareAuthBasic(hs_usr_name, hs_password)
+        hs = HydroShare(auth=auth, hostname='www.hydroshare.org')
+    else:
+        auth = HydroShareAuthBasic(username='topkapi_app', password='topkapi12!@')
+        hs = HydroShare(auth=auth)
+
+        # return {'success': "False",
+        #         'message': "Authentication to HydroShare is failed. Please provide HydroShare User information"}
+
+
+    abstract = 'Input-files for TOPNET model '  # abstract for the new resource
+    title = 'Input-files for TOPNET model for ' + simulation_name  # title for the new resource
+    keywords = ['TOPNET', 'Hydrologic_modeling', 'USU', 'HydroTOP']  # keywords for the new resource
+    rtype = 'GenericResource'  # Hydroshare resource type
+    files = [os.path.join(data_folder, f) for f in os.listdir(data_folder) if
+             os.path.isfile(os.path.join(data_folder, f))]
+
+    hs_res_id_created = hs.createResource(resource_type=rtype, title=title, resource_file=files[0],
+                                          resource_filename=os.path.basename(files[0]),
+                                          abstract=abstract, keywords=keywords,
+                                          edit_users=None, view_users=None, edit_groups=None, view_groups=None,
+                                          metadata=None, extra_metadata=None, progress_callback=None)
+    print ('Resources created is ', hs_res_id_created)
+
+    for file in files[1:]:
+        var2 = hs.addResourceFile(hs_res_id_created, resource_file=file, resource_filename=os.path.basename(file),
+                                  progress_callback=None)
+        # print ('Resources created to which file %s added is %s', (file ,hs_res_id_created))
+
+    try:
+        hs.setAccessRules(hs_res_id_created, public=True)
+    except:
+        print ('Progress --> Failed to make the  hs resource public')
+    print ('Progress --> Successfully pushed files to HydroShare. Created HS_res_ID ', hs_res_id_created)
+    return hs_res_id_created
+
 def read_raster(rast_fname, file_format='GTiff'):
     """Read the data in a raster file
 
@@ -1492,6 +1544,9 @@ def run_topnet(inputs_dictionary):
     __author__ = 'shams', 'Prasanna'
 
     list_of_outfiles_dict = []
+    output_files_url_list = []
+    output_files_list = []
+
     error_returned = None
 
     workingDir = os.path.join( os.path.abspath(os.path.dirname(__file__)) ,  "utils/TOPNET")
@@ -1519,9 +1574,9 @@ def run_topnet(inputs_dictionary):
     input_static_DEM = 'nedWesternUS.tif'
     input_static_Soil_mukey = 'soil_mukey_westernUS.tif'
 
-    # upload_lutkcfile = HDS.upload_file(os.path.join(workingDir, "lutkc.txt"))
-    # # upload topnet control and watermangement files
-    # upload_lutlcfile = HDS.upload_file(os.path.join(workingDir, "lutluc.txt"))
+    upload_lutkcfile = HDS.upload_file(os.path.join(workingDir, "lutkc.txt"))
+    # upload topnet control and watermangement files
+    upload_lutlcfile = HDS.upload_file(os.path.join(workingDir, "lutluc.txt"))
 
     # leftX, topY, rightX, bottomY = -111.822, 42.128, -111.438, 41.686
     # lat_outlet = 41.744
@@ -1534,7 +1589,7 @@ def run_topnet(inputs_dictionary):
     # usgs_gage_number = '10109001'
 
     try:
-        error
+
         # # offline run
         subsetDEM_request = {u'output_raster': u'http://129.123.9.159:20199/files/data/user_6/LogantopnetDEM84.tif'}
         WatershedDEM = {u'output_raster': u'http://129.123.9.159:20199/files/data/user_6/LogantopnetProj30.tif'}
@@ -1820,26 +1875,6 @@ def run_topnet(inputs_dictionary):
         # print "streamflow = ", streamflow
         # list_of_outfiles_dict.append(streamflow)
 
-        # # Trying just the attempt case
-        # list_of_outfiles_dict.append(subsetDEM_request)
-        # list_of_outfiles_dict.append(WatershedDEM)
-        # list_of_outfiles_dict.append(outlet_shapefile_result)
-        # list_of_outfiles_dict.append(project_shapefile_result)
-        # list_of_outfiles_dict.append(Watershed_prod)
-        # list_of_outfiles_dict.append(download_process_climatedata)
-        # list_of_outfiles_dict.append(Create_Reach_Nodelink)
-        # list_of_outfiles_dict.append(Create_wet_distribution)
-        # list_of_outfiles_dict.append(subset_NLCD_result)
-        # list_of_outfiles_dict.append(soil_data)
-        # list_of_outfiles_dict.append(paramlisfile)
-        # list_of_outfiles_dict.append(basinparfile)
-        # list_of_outfiles_dict.append(subsetprismrainfall_request)
-        # list_of_outfiles_dict.append(WatershedPRISMRainfall)
-        # list_of_outfiles_dict.append(project_climate_shapefile_result)
-        # list_of_outfiles_dict.append(create_rainweightfile)
-        # list_of_outfiles_dict.append(creat_latlonxyfile)
-        # # list_of_outfiles_dict.append(streamflow)
-
 
 
     except Exception, error_returned:
@@ -1852,11 +1887,46 @@ def run_topnet(inputs_dictionary):
         print 'list_of_outfiles_dict=',list_of_outfiles_dict
 
 
-    # output_files_url_list  = [u'http://129.123.9.159:20199/files/data/user_6/dth2.tif', u'http://129.123.9.159:20199/files/data/user_6/f.tif', u'http://129.123.9.159:20199/files/data/user_6/psif.tif', u'http://129.123.9.159:20199/files/data/user_6/ko.tif', u'http://129.123.9.159:20199/files/data/user_6/sd.tif', u'http://129.123.9.159:20199/files/data/user_6/trans.tif', u'http://129.123.9.159:20199/files/data/user_6/dth1.tif', u'http://129.123.9.159:20199/files/data/user_6/Logantopnetparam.txt', u'http://129.123.9.159:20199/files/data/user_6/LogantopnetDEM84.tif', u'http://129.123.9.159:20199/files/data/user_6/LogantopnetProj30.tif', u'http://129.123.9.159:20199/files/data/user_6/rchproperties.txt', u'http://129.123.9.159:20199/files/data/user_6/rchlink.txt', u'http://129.123.9.159:20199/files/data/user_6/rchareas.txt', u'http://129.123.9.159:20199/files/data/user_6/nodelinks.txt']
+    output_files_url_list = [u'http://129.123.9.159:20199/files/data/user_6/topnetdemoDEM84.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemoProj30.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemoOutlet.zip',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemoOutletProj.zip',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemonet.zip',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemomoveOutlet2.zip',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemodist.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemocoord.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemoslparr.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemo30WS.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemotree.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/tmaxtmintdew.dat',
+                             u'http://129.123.9.159:20199/files/data/user_6/rain.dat',
+                             u'http://129.123.9.159:20199/files/data/user_6/Climate_Gage.zip',
+                             u'http://129.123.9.159:20199/files/data/user_6/clipar.dat',
+                             u'http://129.123.9.159:20199/files/data/user_6/rchproperties.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/rchlink.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/rchareas.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/nodelinks.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/distribution.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/lulcmmef.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/psif.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/f.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/dth2.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/sd.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/ko.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/trans.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/dth1.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemoparam.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/basinpars.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemoprism84.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/topnetdemoProjPRISM30.tif',
+                             u'http://129.123.9.159:20199/files/data/user_6/ClimateGageProj.zip',
+                             u'http://129.123.9.159:20199/files/data/user_6/rainweights.txt',
+                             u'http://129.123.9.159:20199/files/data/user_6/latlongfromxy.txt']
 
-    output_files_url_list = []
-    output_files_list = []
 
+
+
+    # get the list of URLs of the files created
     for a_dict in list_of_outfiles_dict:
         files = a_dict.values()
         for a_file in files:
@@ -1864,6 +1934,8 @@ def run_topnet(inputs_dictionary):
             output_files_list.append(a_file.split('/')[-1])
 
     print 'output_files_url_list = ', output_files_url_list
+
+
 
     # download all the files
     working_folder = generate_uuid_file_path()
@@ -1877,7 +1949,7 @@ def run_topnet(inputs_dictionary):
             pass
 
 
-    # # zip the folder, push to HydroShare
+    # # zip the folder
     zipf = zipfile.ZipFile(working_folder+'/topnet-files.zip', 'w', zipfile.ZIP_DEFLATED)
     zipdir(working_folder, zipf)
     zipf.close()
@@ -1888,6 +1960,12 @@ def run_topnet(inputs_dictionary):
     zipped_topnet_url = HDS.upload_file(working_folder+'/topnet-files.zip')
     print 'zipped_topnet_url =',zipped_topnet_url
 
+    # push to HydroShare
+    hs_res_id_created = push_topnet_to_hydroshare(simulation_name=inputs_dictionary['simulation_name'],
+                              data_folder=out_folder,
+                              hs_usr_name=None, hs_password=None,
+                              hs_client_id=None, hs_client_secret=None, token=None)
+
     # delete the folder
     shutil.rmtree(working_folder)
 
@@ -1895,10 +1973,7 @@ def run_topnet(inputs_dictionary):
     output_dict['download_link']= zipped_topnet_url
     output_dict['output_files_url_list'] = output_files_url_list
     # output_dict['output_files_list'] = output_files_list
-    output_dict['hs_res_id_created'] = 'incomplete'
-
-    # create_hs_resources_from_hydrodslinks(list_of_hydrods_links=output_files_url_list, hs_usr_name='prasanna310', hs_paswd='Hydrology12!@')
-    # # :TODO either the entire process is complete or not, 1) save prepared file to HydroShare, 2) display the error, 3) display links to file
+    output_dict['hs_res_id_created'] = hs_res_id_created
 
     return output_dict # { 'output_files_url':output_files_url_list  }
 

@@ -45,7 +45,7 @@ def singleton(cls):
 @singleton
 class HydroDS(object):
     def __init__(self, username=None, password=None):
-        print 'HydroDS username: %s, password: %s'%(username,password )
+        # print 'HydroDS username: %s, password: %s'%(username,password )
         """
         Create HydroDS object to access client api functions
         :param username: username for HydroDS

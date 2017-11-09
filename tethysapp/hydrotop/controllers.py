@@ -57,7 +57,7 @@ def model_input(request):
     watershed_name = 'Logan'  # 'RBC' , 'Santa Cruz', 'Barrow Creeks', 'Plunge' , Logan
     initials = {
 
-        'Logan': {'simulation_name': 'Logan_sample', 'USGS_gage': '10109000', 'cell_size': '300', 't0': '10-01-2010',
+        'Logan': {'simulation_name': 'Logan_sample', 'USGS_gage': '10109000', 'cell_size': '30', 't0': '10-01-2010',
                   't': '10-30-2010', 'threshold': '25', 'del_t': '24', 'x': '-111.7836', 'y': '41.7436',
                   'ymax': '42.12', 'xmax': '-111.44', 'ymin': '41.68', 'xmin': '-111.83'},
 
@@ -428,7 +428,7 @@ def model_run(request):
             json_data = app_utils.run_topnet(inputs_dictionary)
 
 
-            print "Preparing TOPNET input-files completed successfully"
+            print "Preparing TOPNET input-files completed successfully. The response dict json_data = ",json_data
 
             if json_data != {}:
                 # same output as Download files
