@@ -53,16 +53,11 @@
 {% gizmo table_view table_query %}
 
 
-<!--{% gizmo  plot_view multi_timeseries_plot %}-->
-<!--{% gizmo  plot_view observed_hydrograph %}-->
-<!--{% gizmo  plot_view observed_hydrograph2 %}-->
-
 
 <!--Google map-->
 <div id='map-container' >
     <!-- app intro-->
     <div id='title' style="margin-bottom:5px">
-        <h5 style="color:#0073e6">Test string1: {{test_string1}} </h5>
 
         <p >
             The model input package includes different forcing dataset and model parameter files,
@@ -100,7 +95,7 @@
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHOUQD9R_tLb6NKA22cuTTvF0j6X8wkgI&callback=initMap&libraries=drawing">
     </script>
-    <script src="{% static 'hydrotop/js/model_input.js' %} " type="text/javascript"></script>
+    <script src="{% static 'hydrotop/js/model_Input.js' %} " type="text/javascript"></script>
 {% endblock %}
 
 {% block content_dependent_styles %}

@@ -37,29 +37,21 @@ class Hydrotop(TethysAppBase):
                            url='hydrotop/model_run',
                            controller='hydrotop.controllers.model_run'),
 
-                    # /hydrotop/model-input2
-                    UrlMap(name='model_input2',
-                           url='hydrotop/model_input2',
-                           controller='hydrotop.controllers.model_input2'),
 
                     UrlMap(name='visualize_shp',
                            url='hydrotop/visualize_shp',
                            controller='hydrotop.controllers.visualize_shp'),
 
-                    # # /hydrotop/test2
-                    # UrlMap(name='test2',
-                    #        url='hydrotop/test2',
-                    #        controller='hydrotop.controllers.test2'),
-
-
+                    # /hydrotop/test2
+                    UrlMap(name='test2',
+                           url='hydrotop/test2',
+                           controller='hydrotop.controllers.test2'),
 
                     UrlMap(name='model_input0',
                            url='hydrotop/model_input0',
                            controller='hydrotop.controllers.model_input0'),
-                    #
-                    # UrlMap(name='test3',
-                    #        url='hydrotop/test3',
-                    #        controller='hydrotop.controllers.test3'),
+
+
         )
 
         return url_maps
