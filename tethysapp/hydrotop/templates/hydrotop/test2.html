@@ -13,7 +13,11 @@
 
 {% block app_content%}
     {% load tethys_gizmos %}
-    {% gizmo table_view table_query %}
+    {% gizmo table_view table_model_calibration %} <br><br>
+    {% gizmo table_view table_model_input %}<br><br>
+    {% gizmo table_view table_model_calibration_ALL %}<br><br>
+    {% gizmo table_view table_model_input_ALL %}<br><br>
+
 
     <p > Test string: {{test_string1}}</p>
 

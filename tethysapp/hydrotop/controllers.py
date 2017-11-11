@@ -419,6 +419,14 @@ def model_run(request):
                 download_link = json_data['output_zipfile']
                 hs_res_downloadfile = json_data['output_json_string']['hs_res_id_created']
 
+            # db
+            try:
+                # Writing to model_inputs_table
+                current_model_inputs_table_id = app_utils.write_to_model_input_table(
+                    inputs_dictionary=inputs_dictionary, hs_resource_id=hs_res_downloadfile)
+            except Exception, e:
+                print "Error ---> Writing to DB", e
+
         elif model_engine_chosen.lower() == 'topnet':
             print 'User action: TOPNET'
 
@@ -438,6 +446,14 @@ def model_run(request):
                 download_status = True
                 download_link = json_data['download_link']
                 hs_res_downloadfile = json_data['hs_res_id_created']
+
+            # db
+            try:
+                # Writing to model_inputs_table
+                current_model_inputs_table_id = app_utils.write_to_model_input_table(
+                    inputs_dictionary=inputs_dictionary, hs_resource_id=hs_res_downloadfile)
+            except Exception, e:
+                print "Error ---> Writing to DB", e
 
         elif model_engine_chosen.lower() == 'topkapi':
             print 'User action: topkapi'
@@ -493,6 +509,7 @@ def model_run(request):
             # replace nan values to 0 because Tethys timeseries cannot display nan
             hydrograph_series_obs = [[item[0], 0] if np.isnan(item[-1]) else item for item in hydrograph_series_obs]
 
+            # db
             try:
                 try:
                     data_qsim_qobs = zip([i[0] for i in hydrograph_series_sim], [i[-1] for i in hydrograph_series_sim],
@@ -511,10 +528,11 @@ def model_run(request):
                     numeric_parameters_list=[pvs_t0_init, vo_t0_init, qc_t0_init, kc_init],
                     calibration_parameters_list=[fac_L_init, fac_Ks_init, fac_n_o_init, fac_n_c_init, fac_th_s_init])
 
-                # Writing to model_result_table
+                # Writing to model_result_table :TODO change this, and write only error measuring the results?
                 current_model_result_table_id = app_utils.write_to_model_result_table(
                     model_calibration_table_id=current_model_calibration_table_id,
                     timeseries_discharge_list=data_qsim_qobs)
+
             except Exception, e:
                 print "Error ---> Writing to DB", e
 
@@ -586,6 +604,10 @@ def model_run(request):
         json_data = app_utils.read_data_from_json(response_JSON_file)
 
         hs_resource_id_created = hs_resource_id_loaded = hs_resource_id  # json_data['hs_res_id_created']
+
+
+
+
 
         hydrograph_series_sim = json_data['hydrograph_series_sim']
         hydrograph_series_obs = json_data['hydrograph_series_obs']
@@ -684,6 +706,36 @@ def model_run(request):
                                                unit='mm/day')
         ppt_ts_obj_loaded = app_utils.create_1d(timeseries_list=ppt, label='Rainfall', unit='mm/day')
         eta_ts_obj_loaded = app_utils.create_1d(timeseries_list=eta, label='Actual Evapotranspiration', unit='mm/day')
+
+
+
+        # db
+        try:
+            try:
+                data_qsim_qobs = zip([i[0] for i in hydrograph_series_sim], [i[-1] for i in hydrograph_series_sim],
+                                     [i[-1] for i in hydrograph_series_obs])
+            except:
+                data_qsim_qobs = zip([i[0] for i in hydrograph_series_sim], [i[-1] for i in hydrograph_series_sim])
+
+            # Writing to model_inputs_table
+            current_model_inputs_table_id = app_utils.get_model_input_id_for_hs_res_id(hs_resource_id_created)
+
+            # Writing to model_calibraiton_table (Because it is first record of the simulation)
+            # IF the model did not run, or if user just wants the files, we don't write to calibration table
+            current_model_calibration_table_id = app_utils.write_to_model_calibration_table(
+                model_input_table_id=current_model_inputs_table_id,
+                numeric_parameters_list=[pvs_t0_init, vo_t0_init, qc_t0_init, kc_init],
+                calibration_parameters_list=[fac_L_init, fac_Ks_init, fac_n_o_init, fac_n_c_init, fac_th_s_init])
+
+            # Writing to model_result_table :TODO change this, and write only error measuring the results?
+            current_model_result_table_id = app_utils.write_to_model_result_table(
+                model_calibration_table_id=current_model_calibration_table_id,
+                timeseries_discharge_list=data_qsim_qobs)
+
+        except Exception, e:
+            print "Error ---> Writing to DB", e
+
+
         # STEP2: Because in this part we load previous simulation, Load the model from hydroshare to hydroDS,
         # STEP2: And from the prepeared model, if the result is not available, run. Otherwise just give the result
         # hydrograph2, table_id = app_utils.run_model_with_input_as_dictionary(inputs_dictionary, False)
@@ -758,6 +810,36 @@ def model_run(request):
         print '***hs_resource_id_created', hs_resource_id_created
         # print [i[-1] for i in hydrograph_series_sim]
         ######### END :  ###############
+
+
+
+        # db
+        try:
+            try:
+                data_qsim_qobs = zip([i[0] for i in hydrograph_series_sim], [i[-1] for i in hydrograph_series_sim],
+                                     [i[-1] for i in hydrograph_series_obs])
+            except:
+                data_qsim_qobs = zip([i[0] for i in hydrograph_series_sim], [i[-1] for i in hydrograph_series_sim])
+
+            # Writing to model_inputs_table
+            current_model_inputs_table_id = app_utils.get_model_input_id_for_hs_res_id(hs_resource_id_created)
+
+            # Writing to model_calibraiton_table (Because it is first record of the simulation)
+            # IF the model did not run, or if user just wants the files, we don't write to calibration table
+            current_model_calibration_table_id = app_utils.write_to_model_calibration_table(
+                model_input_table_id=current_model_inputs_table_id,
+                numeric_parameters_list=[pvs_t0_init, vo_t0_init, qc_t0_init, kc_init],
+                calibration_parameters_list=[fac_L_init, fac_Ks_init, fac_n_o_init, fac_n_c_init, fac_th_s_init])
+
+            # Writing to model_result_table :TODO change this, and write only error measuring the results?
+            current_model_result_table_id = app_utils.write_to_model_result_table(
+                model_calibration_table_id=current_model_calibration_table_id,
+                timeseries_discharge_list=data_qsim_qobs)
+
+        except Exception, e:
+            print "Error ---> Writing to DB", e
+
+
 
         # # # -------DATABASE STUFFS  <start>----- # #
         # # retreive the model_inputs_table.id of this entry to pass it to the next page (calibration page)
@@ -1057,8 +1139,13 @@ def test2(request):
     test_string = 'None'
 
 
-    table_query= app_utils.create_tethysTableView_simulationRecord(user_name)
+    table_model_input= app_utils.create_tethysTableView_simulationRecord(user_name)
+    table_model_calibration = app_utils.create_tethysTableView_calibrationRecord(hs_resource_id='e5514be420da4c8c87ed63bdac0918e2')
 
+    table_model_input_ALL = app_utils.create_tethysTableView_EntireRecord(table_name='model_input')
+    table_model_calibration_ALL = app_utils.create_tethysTableView_EntireRecord(table_name='calibration')
+
+    # table_model_result_ALL  = app_utils.create_tethysTableView_EntireRecord(table_name='result') # this will slow down the computer
 
     try:
         hs = OAuthHS['hs']
@@ -1078,8 +1165,11 @@ def test2(request):
     context = {
         'test_string1': test_string,
 
-        'table_query': table_query,
-
+        'table_model_input': table_model_input,
+        'table_model_calibration': table_model_calibration,
+        'table_model_input_ALL':table_model_input_ALL,
+        'table_model_calibration_ALL':table_model_calibration_ALL,
+        # 'table_model_result_ALL':table_model_result_ALL,
     }
     return render(request, 'hydrotop/test2.html', context)
 

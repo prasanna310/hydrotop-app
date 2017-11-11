@@ -18,6 +18,7 @@ import datetime
 # from tethys_gizmos.gizmo_options import TextInput, DatePicker
 # from tethys_sdk.gizmos import SelectInput
 from tethys_sdk.gizmos import TimeSeries
+from tethys_sdk.gizmos import TableView
 
 from HDS_hydrogate_dev import HydroDS
 import HDS_settings
@@ -1020,9 +1021,9 @@ def write_to_model_input_table(inputs_dictionary, hs_resource_id=""):
 
     user_name = inputs_dictionary['user_name']
     simulation_name = inputs_dictionary['simulation_name']
-    simulation_start_date = inputs_dictionary['simulation_start_date']
-    simulation_end_date = inputs_dictionary['simulation_end_date']
-    USGS_gage = int(inputs_dictionary['USGS_gage'])
+    simulation_start_date = inputs_dictionary['simulation_start_date'].replace('/','-')
+    simulation_end_date = inputs_dictionary['simulation_end_date'].replace('/','-')
+    USGS_gage = inputs_dictionary['USGS_gage']
 
     outlet_x = float(inputs_dictionary['outlet_x'])
     outlet_y = float(inputs_dictionary['outlet_y'])
@@ -1316,25 +1317,103 @@ def create_tethysGizmos_from_json(json_data):
     eta_ts_obj_loaded = create_1d(timeseries_list=eta, label='Actual Evapotranspiration', unit='mm/day')
 
 
-def create_tethysTableView_simulationRecord(user_name):
+
+def get_model_input_id_for_hs_res_id(hs_resource_id):
     from tethys_sdk.gizmos import TableView
-    from .model import engine, Base, SessionMaker, model_calibration_table, model_inputs_table
+    from .model import  SessionMaker, model_inputs_table
+    session = SessionMaker()  # Make session
+
+    qry = session.query(model_inputs_table).filter(
+        model_inputs_table.hs_resource_id == hs_resource_id).first()  # because PK is the same as no of rows, i.e. length
+
+    input_table_id = qry.id
+    print 'Hs_res_id: %s is related to input_table_id: %s '% (hs_resource_id,input_table_id)
+    return input_table_id
+
+def create_tethysTableView_EntireRecord( table_name='model_input'):
+    from tethys_sdk.gizmos import TableView
+    from .model import engine, Base, SessionMaker, model_calibration_table, model_inputs_table, model_result_table
     from sqlalchemy import inspect
     import sqlalchemy
     session = SessionMaker()  # Make session
 
-    # qry1 = session.query(model_inputs_table).filter(model_inputs_table.simulation_name == 'simulation-1').delete()  # because PK is the same as no of rows, i.e. length
-    # print 'deleted or not, ', qry1
-    # test_string = qry1
 
-    # qry = session.query(model_inputs_table.simulation_name).filter(model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
-    # test_string = qry
-    # print test_string
-    # foo_col = sqlalchemy.sql.column('foo')
-    # s = sqlalchemy.sql.select(['*']).where(foo_col == 1)
+    if table_name =='model_input':
+        model_input_rows = []
+        model_input_cols = ('Simulation name', 'hs_res_id',
+                            'usgs gage', 'outlet X', 'outlet Y',
+                            'box_topY','box_bottomY','box_rightX','box_leftX',
+                                  'Cell size','stream threshold',
+                            )
+
+
+        qry = session.query(model_inputs_table).all()  # because PK is the same as no of rows, i.e. length
+        for row in qry:
+            test_string = round(float(row.box_topY), 3)
+            row_tuple = (row.simulation_name, row.hs_resource_id,  # row.simulation_start_date, row.simulation_end_date,
+                         row.USGS_gage, row.outlet_x, row.outlet_y,
+                         round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
+                         row.other_model_parameters.split('__')[2],  # REMEMBER: daymet__25__100__24
+                         row.other_model_parameters.split('__')[1],  # REMEMBER: daymet__25__100__24
+                         )
+            model_input_rows.append(row_tuple)
+
+        table_query = TableView(column_names=model_input_cols,
+                                rows=model_input_rows,
+                                hover=True,
+                                striped=True,
+                                bordered=False,
+                                condensed=True)
+
+    if table_name == 'calibration':
+
+        qry = session.query(model_calibration_table).all()
+
+        rows = []
+        for row in qry:
+            row_tuple = (row.numeric_parameters, row.calibration_parameters)
+            rows.append(row_tuple)
+
+        cols = ('Numeric parameters', 'calibration parameters')
+
+        table_query = TableView(column_names=cols,
+                                rows=rows,
+                                hover=True,
+                                striped=True,
+                                bordered=False,
+                                condensed=True)
+
+    if table_name == 'result':
+
+        qry = session.query(model_result_table).all()
+
+        rows = []
+        for row in qry:
+            row_tuple = (row.model_calibration_id, row.datetime,
+                         row.simulated_discharge, row.observed_discharge)
+            rows.append(row_tuple)
+
+        cols = ('model_calibration_id', 'datetime',
+                'simulated_discharge', 'observed_discharge')
+
+        table_query = TableView(column_names=cols,
+                                rows=rows,
+                                hover=True,
+                                striped=True,
+                                bordered=False,
+                                condensed=True)
+
+    return table_query
+
+def create_tethysTableView_simulationRecord(user_name):
+    from tethys_sdk.gizmos import TableView
+    from .model import  SessionMaker, model_inputs_table
+
+    session = SessionMaker()  # Make session
+
 
     model_input_rows = []
-    model_input_cols = ('Simulation name', 'hs_res_id',  # 'start', 'end',
+    model_input_cols = ('Simulation name', 'hs_res_id',  'start date', 'end date',
                         'usgs gage', 'outlet X', 'outlet Y',
                         'box_topY','box_bottomY','box_rightX','box_leftX',
                         # 'model_engine', 'rain/et source',  'timestep',
@@ -1349,7 +1428,7 @@ def create_tethysTableView_simulationRecord(user_name):
     # REMEMBER: daymet__25__100__24
     for row in qry:
         test_string = round(float(row.box_topY), 3)
-        row_tuple = (row.simulation_name, row.hs_resource_id,  # row.simulation_start_date, row.simulation_end_date,
+        row_tuple = (row.simulation_name, row.hs_resource_id, row.simulation_start_date, row.simulation_end_date,
                      row.USGS_gage, row.outlet_x, row.outlet_y,
                      round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
                      # row.model_engine,
@@ -1368,40 +1447,23 @@ def create_tethysTableView_simulationRecord(user_name):
                             condensed=True)
     return table_query
 
-def create_tethysTableView_calibrationRecord(user_name):
+def create_tethysTableView_calibrationRecord( hs_resource_id):
     from tethys_sdk.gizmos import TableView
-    from .model import engine, Base, SessionMaker, model_calibration_table, model_inputs_table
-    from sqlalchemy import inspect
-    import sqlalchemy
+    from .model import  SessionMaker, model_calibration_table, model_inputs_table
     session = SessionMaker()  # Make session
 
+    # for the given hs id, find input_table_id
+    input_table_id = get_model_input_id_for_hs_res_id(hs_resource_id)
+
+    # step-2: for that table id, display calibration table
+    qry = session.query(model_calibration_table).filter( model_calibration_table.input_table_id == input_table_id).all()  # because PK is the same as no of rows, i.e. length
 
     rows = []
-    cols = ('Simulation name', 'hs_res_id',  # 'start', 'end',
-                        'usgs gage', 'outlet X', 'outlet Y',
-                        'box_topY','box_bottomY','box_rightX','box_leftX',
-                        # 'model_engine', 'rain/et source',  'timestep',
-                        'Cell size','stream threshold',
-                        # 'remarks', 'user_option'
-                        )
-    # model_input_cols = model_inputs_table.__table__.columns
-
-    qry = session.query(model_inputs_table).filter(
-        model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
-    # test_string = cols  # .__getitem__()
-
+    cols = ('Numeric parameters', 'calibration parameters')
     for row in qry:
-        test_string = round(float(row.box_topY), 3)
-        row_tuple = (row.simulation_name, row.hs_resource_id,  # row.simulation_start_date, row.simulation_end_date,
-                     row.USGS_gage, row.outlet_x, row.outlet_y,
-                     round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
-                     # row.model_engine,
-                     row.other_model_parameters.split('__')[2],  # REMEMBER: daymet__25__100__24
-                     row.other_model_parameters.split('__')[1],  # REMEMBER: daymet__25__100__24
-                     # row.other_model_parameters.split('__')[2], row.other_model_parameters.split('__')[3], #timestep
-                     # ,row.remarks ,row.user_option
-                     )
+        row_tuple = (row.numeric_parameters , row.calibration_parameters)
         rows.append(row_tuple)
+
 
     table_query = TableView(column_names=cols,
                             rows=rows,
@@ -1410,6 +1472,7 @@ def create_tethysTableView_calibrationRecord(user_name):
                             bordered=False,
                             condensed=True)
     return table_query
+
 
 
 def loadpytopkapi(hs_res_id, out_folder=""):
