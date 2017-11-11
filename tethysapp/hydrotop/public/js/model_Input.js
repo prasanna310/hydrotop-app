@@ -12,7 +12,7 @@ $(document).ready(function() {
     $("#box_rightX").bind('input', drawRectangleOnTextChange);
     $("#box_leftX").bind('input', drawRectangleOnTextChange);
 
-    $("#model_engine").bind('input', ShowHideTopnetInputs);
+    $("#model_engine").bind('input', ShowHideAdditionalInputs);
     $("#cell_size").bind('input', area_domain);
 
     // ajax call function to submit the form
@@ -139,6 +139,7 @@ function initMap() {
 
     drawRectangleOnTextChange();
     drawMarkerOnTextChange();
+    ShowHideAdditionalInputs();
     // area_domain();
 
 
@@ -502,7 +503,7 @@ function displayCoordinates(pnt) {
 
 
 
-function ShowHideTopnetInputs() {
+function ShowHideAdditionalInputs() {
     var model_engine = document.forms["inputs"]["model_engine"].value;
     // alert(model_engine);
 
@@ -510,18 +511,21 @@ function ShowHideTopnetInputs() {
         // $("#topnet_input").show();  //only this is required for jQuery!
         document.getElementById("topnet_input").style.display = "block";
         document.getElementById("download_input").style.display = "none";
+        document.getElementById("topkapi_initials").style.display = "none";
     }
 
     if (model_engine=='download') {
         // $("#topnet_input").show();  //only this is required for jQuery!
         document.getElementById("download_input").style.display = "block";
         document.getElementById("topnet_input").style.display = "none";
+        document.getElementById("topkapi_initials").style.display = "none";
     }
 
     if (model_engine=='TOPKAPI') {
         // $("#topnet_input").show();  //only this is required for jQuery!
         document.getElementById("download_input").style.display = "none";
         document.getElementById("topnet_input").style.display = "none";
+        document.getElementById("topkapi_initials").style.display = "block";
     }
 
 }

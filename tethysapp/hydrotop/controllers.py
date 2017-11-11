@@ -46,48 +46,40 @@ def model_input(request):
     # give the value for thsi variable = 0 if the program is starting for the first time
     simulation_names_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
 
+    # init_cell_flow, init_overland_vol, init_soil_percentsat
     # # intials
-    watershed_name = 'Logan'  # 'RBC' , 'Santa Cruz', 'Barrow Creeks', 'Plunge' , Logan
+    watershed_name = 'SantaCruz'  # 'RBC' , 'Santa Cruz', 'Barrow Creeks', 'Plunge' , Logan
     initials = {
 
         'Logan': {'simulation_name': 'Logan_sample', 'USGS_gage': '10109000', 'cell_size': '30', 't0': '10-01-2010',
                   't': '10-30-2010', 'threshold': '25', 'del_t': '24', 'x': '-111.7836', 'y': '41.7436',
-                  'ymax': '42.12', 'xmax': '-111.44', 'ymin': '41.68', 'xmin': '-111.83'},
+                  'ymax': '42.12', 'xmax': '-111.44', 'ymin': '41.68', 'xmin': '-111.83' ,
+                  'init_soil_percentsat':'30' },
 
         'RBC': {'simulation_name': 'RBC_sample', 'USGS_gage': '10172200', 'cell_size': '100', 't0': '10-01-2010',
                 't': '10-03-2011', 'threshold': '2', 'del_t': '24', 'x': '-111.80624', 'y': '40.77968',
-                'ymax': '40.8327', 'xmax': '-111.728', 'ymin': '40.772', 'xmin': '-111.834'},
+                'ymax': '40.8327', 'xmax': '-111.728', 'ymin': '40.772', 'xmin': '-111.834',
+                'init_soil_percentsat': '30'},
 
         'Plunge': {'simulation_name': 'Plunge_demo', 'USGS_gage': '11055500', 'cell_size': '100', 't0': '10-01-2010',
                    't': '10-01-2011', 'threshold': '5', 'del_t': '24', 'x': '-117.141284', 'y': '34.12128',
                    # 'ymax':'34.2336', 'xmax': '-117.048046', 'ymin': '34.10883', 'xmin': '-117.168289',
-                   'ymax': '34.213', 'xmax': '-117.062', 'ymin': '34.10883', 'xmin': '-117.18'
+                   'ymax': '34.213', 'xmax': '-117.062', 'ymin': '34.10883', 'xmin': '-117.18',
+                   'init_soil_percentsat': '30'
                    },
 
         'SantaCruz': {'simulation_name': 'SantaCruz_demo', 'USGS_gage': '11124500', 'cell_size': '100',
                       't0': '10-01-2010',
                       't': '10-01-2011', 'threshold': '5', 'del_t': '24', 'x': '-119.90873', 'y': '34.59637',
-                      'ymax': '34.714', 'xmax': '-119.781', 'ymin': '34.586', 'xmin': '-119.925'},
+                      'ymax': '34.714', 'xmax': '-119.781', 'ymin': '34.586', 'xmin': '-119.925',
+                      'init_soil_percentsat': '30'},
 
-        'BlancoRiver': {'simulation_name': 'BlancoRiver_demo', 'USGS_gage': '08171000', 'cell_size': '100',
-                        't0': '01-01-2010',
-                        't': '12-30-2011', 'threshold': '20', 'del_t': '24', 'x': '-98.088989', 'y': '29.99349',
-                        'ymax': '30.20707', 'xmax': '-98.0679', 'ymin': '29.96298', 'xmin': '-98.4732'},
-
-        'OnionCreek': {'simulation_name': 'OnionCreek_trial', 'USGS_gage': '08158700', 'cell_size': '200',
-                       't0': '01-01-2010',
-                       't': '12-30-2011', 'threshold': '20', 'del_t': '24', 'x': '-98.00826', 'y': '30.08341',
-                       'ymax': '30.213', 'xmax': '-97.956', 'ymin': '30.027', 'xmin': '-98.461'},
-
-        'BigCreek': {'simulation_name': 'BigCreek_freestone_tx', 'USGS_gage': '08110430', 'cell_size': '100',
-                     't0': '10-01-2010',
-                     't': '10-01-2011', 'threshold': '15', 'del_t': '24', 'x': '-96.5066', 'y': '31.08341',
-                     'ymax': '30.213', 'xmax': '-97.956', 'ymin': '30.027', 'xmin': '-97.99'},
 
         'SantaMaria': {'simulation_name': 'SANTA_MARIA_CA_201011', 'USGS_gage': '11028500', 'cell_size': '100',
                        't0': '10-01-2010',
                        't': '10-01-2011', 'threshold': '15', 'del_t': '24', 'x': '-116.9455844', 'y': '33.0522655',
-                       'ymax': '30.213', 'xmax': '-97.956', 'ymin': '30.027', 'xmin': '-97.99'},
+                       'ymax': '30.213', 'xmax': '-97.956', 'ymin': '30.027', 'xmin': '-97.99',
+                       'init_soil_percentsat': '30'},
 
     }
 
@@ -111,6 +103,14 @@ def model_input(request):
                                             initial=initials[watershed_name]['t'])
     threshold = TextInput(display_text='Stream threshold in square km', name='threshold',
                           initial=initials[watershed_name]['threshold'])
+
+
+    init_soil_percentsat = TextInput(display_text='Intial saturation in soil cells (in %) ', name='init_soil_percentsat',
+                          initial=initials[watershed_name]['init_soil_percentsat'])
+    init_overland_vol = TextInput(display_text='Intial volume of water in overland cells (in m3) ', name='init_overland_vol',
+                          initial=str(  0.0003* float(initials[watershed_name]['cell_size'])**2  ))
+    init_cell_flow = TextInput(display_text='Intial flow of water in channel cells (in m3/s) ', name='init_cell_flow',
+                          initial=str( float(initials[watershed_name]['cell_size']) * .001) )
 
     threshold_topnet = TextInput(display_text='Stream threshold', name='threshold_topnet', initial=100)
     pk_min_threshold = TextInput(display_text='pk_min_threshold', name='pk_min_threshold', initial=500)
@@ -166,6 +166,7 @@ def model_input(request):
     table_id = 0
     validation_status = True
 
+    # this does not work now. Because the request is sent to model-run page
     # when it receives request. This is not in effect. Currently, the request is sent to model_run, not model_input.html
     if request.is_ajax and request.method == 'POST':
         try:
@@ -237,11 +238,14 @@ def model_input(request):
         'geojson_outlet': geojson_outlet,
         'geojson_domain': geojson_files,
 
+        'init_soil_percentsat':init_soil_percentsat,
+        'init_overland_vol': init_overland_vol,
+        'init_cell_flow': init_cell_flow,
+
         'threshold_topnet': threshold_topnet,
         'pk_min_threshold': pk_min_threshold,
         'pk_max_threshold': pk_max_threshold,
         'pk_num_thershold': pk_num_thershold,
-
     }
 
     return render(request, 'hydrotop/model_input.html', context)

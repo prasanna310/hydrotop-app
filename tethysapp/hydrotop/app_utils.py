@@ -76,7 +76,13 @@ def create_model_input_dict_from_request(request):
                          "threshold": int(request.POST['threshold']),
                          "cell_size": float(request.POST['cell_size']),
                          "timestep": int(request.POST['timestep']),
-                         "model_engine": request.POST['model_engine']
+                         "model_engine": request.POST['model_engine'],
+
+                         #init_cell_flow, init_overland_vol, init_soil_percentsat
+                         "init_soil_percentsat": float(request.POST['init_soil_percentsat']),
+                         "init_overland_vol": float(request.POST['init_overland_vol']),
+                         "init_cell_flow": float(request.POST['init_cell_flow']),
+
                          }
 
 
@@ -2238,10 +2244,6 @@ def call_runpytopkapi(inputs_dictionary, out_folder=''):
 
 
 
-if __name__ == '__main__':
-    zipf = zipfile.ZipFile('Python.zip', 'w', zipfile.ZIP_DEFLATED)
-    zipdir('tmp/', zipf)
-    zipf.close()
 
 
 
