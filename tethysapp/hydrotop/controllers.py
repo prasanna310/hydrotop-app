@@ -1041,7 +1041,7 @@ def test2(request):
     from django.core.files.storage import default_storage
     from django.core.files.base import ContentFile
     from django.conf import settings
-    from tethys_sdk.gizmos import TableView
+    # from tethys_sdk.gizmos import TableView
 
     user_name = request.user.username
 
