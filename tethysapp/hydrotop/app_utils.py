@@ -78,10 +78,10 @@ def create_model_input_dict_from_request(request):
                          "timestep": int(request.POST['timestep']),
                          "model_engine": request.POST['model_engine'],
 
-                         #init_cell_flow, init_overland_vol, init_soil_percentsat
+                         #init_channel_flow, init_overland_vol, init_soil_percentsat
                          "init_soil_percentsat": float(request.POST['init_soil_percentsat']),
                          "init_overland_vol": float(request.POST['init_overland_vol']),
-                         "init_cell_flow": float(request.POST['init_cell_flow']),
+                         "init_channel_flow": float(request.POST['init_channel_flow']),
 
                          }
 
@@ -198,8 +198,14 @@ def create_model_input_dict_from_request(request):
         inputs_dictionary['pk_max_threshold'] = int(request.POST['pk_max_threshold'])
         inputs_dictionary['pk_num_thershold'] = int(request.POST['pk_num_thershold'])
 
+    if inputs_dictionary['model_engine'].lower() == 'topkapi':
+        inputs_dictionary['init_soil_percentsat'] = int(request.POST['init_soil_percentsat'])
+        inputs_dictionary['init_overland_vol'] = int(request.POST['init_overland_vol'])
+        inputs_dictionary['init_channel_flow'] = int(request.POST['init_channel_flow'])
 
+    print 'inputs_dictionary', inputs_dictionary
     return inputs_dictionary
+
 
 
 
@@ -1037,6 +1043,7 @@ def write_to_model_input_table(inputs_dictionary, hs_resource_id=""):
     user_option = ''
 
     # other model parameter is string or text, combining parametes with __ (double underscore)
+    # other_model_parameters = daymet__25__100__24
     other_model_parameters = str(timeseries_source) + "__" + str(threshold) + "__" + str(cell_size) + "__" + str(
         timestep)
 
@@ -1331,7 +1338,7 @@ def create_tethysTableView_simulationRecord(user_name):
                         'usgs gage', 'outlet X', 'outlet Y',
                         'box_topY','box_bottomY','box_rightX','box_leftX',
                         # 'model_engine', 'rain/et source',  'timestep',
-                        'stream threshold', 'Cell size',
+                        'Cell size','stream threshold',
                         # 'remarks', 'user_option'
                         )
     # model_input_cols = model_inputs_table.__table__.columns
@@ -1339,13 +1346,15 @@ def create_tethysTableView_simulationRecord(user_name):
     qry = session.query(model_inputs_table).filter(
         model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
     test_string = model_input_cols  # .__getitem__()
+    # REMEMBER: daymet__25__100__24
     for row in qry:
         test_string = round(float(row.box_topY), 3)
         row_tuple = (row.simulation_name, row.hs_resource_id,  # row.simulation_start_date, row.simulation_end_date,
                      row.USGS_gage, row.outlet_x, row.outlet_y,
                      round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
                      # row.model_engine,
-                     row.other_model_parameters.split('__')[0], row.other_model_parameters.split('__')[1],   #cell size
+                     row.other_model_parameters.split('__')[2],  # REMEMBER: daymet__25__100__24
+                     row.other_model_parameters.split('__')[1],  # REMEMBER: daymet__25__100__24
                      # row.other_model_parameters.split('__')[2], row.other_model_parameters.split('__')[3], #timestep
                      # ,row.remarks ,row.user_option
                      )
@@ -1353,6 +1362,49 @@ def create_tethysTableView_simulationRecord(user_name):
 
     table_query = TableView(column_names=model_input_cols,
                             rows=model_input_rows,
+                            hover=True,
+                            striped=True,
+                            bordered=False,
+                            condensed=True)
+    return table_query
+
+def create_tethysTableView_calibrationRecord(user_name):
+    from tethys_sdk.gizmos import TableView
+    from .model import engine, Base, SessionMaker, model_calibration_table, model_inputs_table
+    from sqlalchemy import inspect
+    import sqlalchemy
+    session = SessionMaker()  # Make session
+
+
+    rows = []
+    cols = ('Simulation name', 'hs_res_id',  # 'start', 'end',
+                        'usgs gage', 'outlet X', 'outlet Y',
+                        'box_topY','box_bottomY','box_rightX','box_leftX',
+                        # 'model_engine', 'rain/et source',  'timestep',
+                        'Cell size','stream threshold',
+                        # 'remarks', 'user_option'
+                        )
+    # model_input_cols = model_inputs_table.__table__.columns
+
+    qry = session.query(model_inputs_table).filter(
+        model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
+    # test_string = cols  # .__getitem__()
+
+    for row in qry:
+        test_string = round(float(row.box_topY), 3)
+        row_tuple = (row.simulation_name, row.hs_resource_id,  # row.simulation_start_date, row.simulation_end_date,
+                     row.USGS_gage, row.outlet_x, row.outlet_y,
+                     round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
+                     # row.model_engine,
+                     row.other_model_parameters.split('__')[2],  # REMEMBER: daymet__25__100__24
+                     row.other_model_parameters.split('__')[1],  # REMEMBER: daymet__25__100__24
+                     # row.other_model_parameters.split('__')[2], row.other_model_parameters.split('__')[3], #timestep
+                     # ,row.remarks ,row.user_option
+                     )
+        rows.append(row_tuple)
+
+    table_query = TableView(column_names=cols,
+                            rows=rows,
                             hover=True,
                             striped=True,
                             bordered=False,
@@ -2198,13 +2250,50 @@ def call_runpytopkapi(inputs_dictionary, out_folder=''):
         rain_et['output_et_reference_fname'] = watershed_files['output_raster'] #:TODO, need to think what to do for ET if UEB
     print 'rain_et =', rain_et
 
+    #
+    # run_model_call = HDS.runpytopkapi6(user_name=inputs_dictionary['user_name'],
+    #                                    simulation_name=valid_simulation_name, #inputs_dictionary['simulation_name'],
+    #                                    simulation_start_date=inputs_dictionary['simulation_start_date'],
+    #                                    simulation_end_date=inputs_dictionary['simulation_end_date'],
+    #                                    USGS_gage=inputs_dictionary['USGS_gage'],
+    #                                    threshold=inputs_dictionary['threshold'],
+    #
+    #                                    # channel_manning_fname=watershed_files['output_mannings_n_stream_raster'],
+    #                                    overland_manning_fname=reclassify_nlcd['output_raster'],
+    #
+    #                                    hillslope_fname=watershed_files['output_slope_raster'],
+    #                                    # slope_raster['output_raster'], because sd8 is tan of angle, whereas slope is in degree
+    #                                    dem_fname=watershed_files['output_fill_raster'],
+    #                                    channel_network_fname=watershed_files['output_stream_raster'],
+    #                                    mask_fname=watershed_files['output_raster'],
+    #                                    flowdir_fname=watershed_files['output_flow_direction_raster'],
+    #
+    #                                    pore_size_dist_fname=soil_files['output_pore_size_distribution_file'],
+    #                                    bubbling_pressure_fname=soil_files['output_bubbling_pressure_file'],
+    #                                    resid_moisture_content_fname=soil_files['output_residual_soil_moisture_file'],
+    #                                    sat_moisture_content_fname=soil_files['output_saturated_soil_moisture_file'],
+    #                                    conductivity_fname= soil_files['output_ksat_LUT_file'], #soil_files['output_ksat_ssurgo_wtd_file'],  # only change is here, based on downloadsoildataforpytopkapi3 or 4
+    #                                    # soil_files['output_ksat_rawls_file'],
+    #                                    soil_depth_fname=  watershed_files['output_raster'],                                          # soil_files['output_sd_file'],
+    #
+    #                                    timestep=inputs_dictionary['timestep'],
+    #                                    output_response_txt="pytopkpai_response.txt",
+    #                                    rain_fname= rain_et['output_rain_fname'],
+    #                                    et_fname= rain_et['output_et_reference_fname'],
+    #                                    timeseries_source = inputs_dictionary['timeseries_source']
+    #                                    )
 
-    run_model_call = HDS.runpytopkapi6(user_name=inputs_dictionary['user_name'],
+
+    run_model_call = HDS.runpytopkapi7(user_name=inputs_dictionary['user_name'],
                                        simulation_name=valid_simulation_name, #inputs_dictionary['simulation_name'],
                                        simulation_start_date=inputs_dictionary['simulation_start_date'],
                                        simulation_end_date=inputs_dictionary['simulation_end_date'],
                                        USGS_gage=inputs_dictionary['USGS_gage'],
                                        threshold=inputs_dictionary['threshold'],
+
+                                       init_soil_percentsat=inputs_dictionary['init_soil_percentsat'],
+                                       init_overland_vol=inputs_dictionary['init_overland_vol'],
+                                       init_channel_flow=inputs_dictionary['init_channel_flow'],
 
                                        # channel_manning_fname=watershed_files['output_mannings_n_stream_raster'],
                                        overland_manning_fname=reclassify_nlcd['output_raster'],

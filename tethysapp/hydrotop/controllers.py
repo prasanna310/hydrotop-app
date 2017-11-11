@@ -7,6 +7,12 @@ from django.shortcuts import render
 # from tethys_sdk.gizmos import TimeSeries, AreaRange, PlotView, LinePlot
 # import datetime
 
+from django.http import HttpResponse
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from oauthlib.oauth2 import TokenExpiredError
+from hs_restclient import HydroShare, HydroShareAuthOAuth2, HydroShareNotAuthorized, HydroShareNotFound
+
 # from tethys_apps.sdk.gizmos import *
 from tethys_sdk.gizmos import *
 
@@ -35,7 +41,7 @@ def home(request):
 
     return render(request, 'hydrotop/home.html', context)
 
-
+# init_channel_flow, init_overland_vol, init_soil_percentsat
 def model_input(request):
     user_name = request.user.username
 
@@ -46,7 +52,7 @@ def model_input(request):
     # give the value for thsi variable = 0 if the program is starting for the first time
     simulation_names_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
 
-    # init_cell_flow, init_overland_vol, init_soil_percentsat
+    # init_channel_flow, init_overland_vol, init_soil_percentsat
     # # intials
     watershed_name = 'SantaCruz'  # 'RBC' , 'Santa Cruz', 'Barrow Creeks', 'Plunge' , Logan
     initials = {
@@ -109,7 +115,7 @@ def model_input(request):
                           initial=initials[watershed_name]['init_soil_percentsat'])
     init_overland_vol = TextInput(display_text='Intial volume of water in overland cells (in m3) ', name='init_overland_vol',
                           initial=str(  0.0003* float(initials[watershed_name]['cell_size'])**2  ))
-    init_cell_flow = TextInput(display_text='Intial flow of water in channel cells (in m3/s) ', name='init_cell_flow',
+    init_channel_flow = TextInput(display_text='Intial flow of water in channel cells (in m3/s) ', name='init_channel_flow',
                           initial=str( float(initials[watershed_name]['cell_size']) * .001) )
 
     threshold_topnet = TextInput(display_text='Stream threshold', name='threshold_topnet', initial=100)
@@ -240,7 +246,7 @@ def model_input(request):
 
         'init_soil_percentsat':init_soil_percentsat,
         'init_overland_vol': init_overland_vol,
-        'init_cell_flow': init_cell_flow,
+        'init_channel_flow': init_channel_flow,
 
         'threshold_topnet': threshold_topnet,
         'pk_min_threshold': pk_min_threshold,
@@ -274,6 +280,7 @@ def model_run(request):
 
     """
     user_name = request.user.username
+    # model_input_load_request = hs_resource_id_loaded = request.GET.get('res_id', None)
 
     # Defaults
     test_string = "Test_string_default"
@@ -348,8 +355,6 @@ def model_run(request):
     # # check to see if the request is from method (1)
     try:
         model_input_prepare_request = request.POST['simulation_name']
-        # if request.POST['download_choice'] != None:
-        #     model_input_prepare_request = None
         print "MSG from I: Preparing model simulation, simulation name is: ", model_input_prepare_request
     except:
 
@@ -368,13 +373,15 @@ def model_run(request):
 
         # for the drop down list
         except:
-            model_input_load_request = hs_resource_id_created = request.POST[
-                'simulation_names_list']  # from drop down menu
+            model_input_load_request = hs_resource_id_created = request.POST['simulation_names_list']  # from drop down menu
             b = request.POST['load_simulation_name']
             print 'MSG from II: The name of simulation loaded from dropdown menu is: ', hs_resource_id_created
             print "MSG from II: Previous simulation is loaded. The name of simulation loaded is: ", hs_resource_id_created
     except:
-        model_input_load_request = None
+        # loading from URL
+        model_input_load_request = hs_resource_id_loaded = request.GET.get('res_id', None)
+        if hs_resource_id_loaded == None: #model_input_load_request = hs_resource_id_loaded = request.GET.get('res_id', None)
+            model_input_load_request = None
 
     # # check to see if the request is from method (3)
     try:
@@ -443,7 +450,7 @@ def model_run(request):
 
             # # Method (1), STEP (2):call_runpytopkapi function
             response_JSON_file = '/home/prasanna/tethysdev/tethysapp-hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/d1785b759e454ab3a67e3999dc74d813/pytopkpai_responseJSON.txt'
-            # response_JSON_file = app_utils.call_runpytopkapi(inputs_dictionary=inputs_dictionary)
+            response_JSON_file = app_utils.call_runpytopkapi(inputs_dictionary=inputs_dictionary)
 
             json_data = app_utils.read_data_from_json(response_JSON_file)
 
@@ -1042,150 +1049,31 @@ def google_map_input(request):
 
 
 def test2(request):
-    from django.core.files.storage import default_storage
-    from django.core.files.base import ContentFile
-    from django.conf import settings
-    # from tethys_sdk.gizmos import TableView
+
+    OAuthHS = get_OAuthHS(request)
 
     user_name = request.user.username
 
     test_string = 'None'
-    wshed_shp_fname = None
-    outlet_shp_fname = None
-
-    watershed_files = {}
-    outlet_files = {}
-
-    cell_size = 300
-    avg_lat = 40  # (inputs_dictionary['box_bottomY'] + inputs_dictionary['box_topY'])/2
-
-    if request.is_ajax and request.method == 'POST' and request.FILES.getlist('watershed_upload') != []:
-
-        for afile in request.FILES.getlist('watershed_upload'):
-
-            print "watershed file(s) detected"
-
-            tmp = os.path.join(settings.MEDIA_ROOT, "tmp", afile.name)
-            path = default_storage.save(tmp, ContentFile(afile.read()))
-
-            tmp_file = os.path.join(settings.MEDIA_ROOT, path)
-            tmp_file = os.path.abspath(tmp_file)
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'shp':
-                watershed_files['shp'] = tmp_file
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'shx':
-                watershed_files['shx'] = tmp_file
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'dbf':
-                watershed_files['dbf'] = tmp_file
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'prj':
-                watershed_files['prj'] = tmp_file
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'tif' or os.path.split(tmp_file)[-1].split(".")[
-                -1] == 'tiff':
-                watershed_files['tif'] = tmp_file
-            if os.path.split(tmp_file)[-1][-3:] not in ['shp', 'shx', 'dbf', 'prj', 'tif', 'iff']:
-                os.remove(tmp_file)
-
-        if 'shp' and 'shx' in watershed_files:
-            wshed_shp_fname = app_utils.rename_shapefile_collection(watershed_files, 'watershed')
-
-    if request.is_ajax and request.method == 'POST' and request.FILES.getlist('outlet_upload') != []:
-
-        print "Outlet file(s) detected", request.FILES.getlist('outlet_upload')
-
-        for afile in request.FILES.getlist('outlet_upload'):
-
-            tmp = os.path.join(settings.MEDIA_ROOT, "tmp", afile.name)
-            path = default_storage.save(tmp, ContentFile(afile.read()))
-
-            tmp_file = os.path.join(settings.MEDIA_ROOT, path)
-            tmp_file = os.path.abspath(tmp_file)
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'shp':
-                outlet_files['shp'] = tmp_file
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'shx':
-                outlet_files['shx'] = tmp_file
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'dbf':
-                outlet_files['dbf'] = tmp_file
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'prj':
-                outlet_files['prj'] = tmp_file
-            if os.path.split(tmp_file)[-1].split(".")[-1] == 'tif' or os.path.split(tmp_file)[-1].split(".")[
-                -1] == 'tiff':
-                outlet_files['tif'] = tmp_file
-            if os.path.split(tmp_file)[-1][-3:] not in ['shp', 'shx', 'dbf', 'prj', 'tif', 'tiff']:
-                os.remove(tmp_file)
-
-        outlet_shp_fname = app_utils.rename_shapefile_collection(outlet_files, 'outlet')
-
-    if wshed_shp_fname != None:
-        # get the bounding box
-        lon_e, lat_s, lon_w, lat_n = app_utils.get_box_xyxy_from_shp(wshed_shp_fname + '.shp')
-
-        # bbox with buffer (3 * cell size)
-        angle_along_lon, angle_along_lat = app_utils.meter_to_degree(cell_size, avg_lat)
-        lon_e, lat_s, lon_w, lat_n = lon_e + angle_along_lon, lat_s - angle_along_lat, lon_w - angle_along_lon, lat_n + angle_along_lat
-
-        # convert to watershed geojson
-        geojson_fullpath = os.path.abspath(app_utils.shapefile_to_geojson(wshed_shp_fname + '.shp'))
-        test_string = 'Watershed shapefile detected. Converted to geojson at' + geojson_fullpath
-
-    if outlet_shp_fname != None:
-        # get the outlet coordinate
-        lon, lat = app_utils.get_outlet_xy_from_shp(outlet_shp_fname + '.shp')
-
-        # covert to geojson
-        geojson_fullpath = os.path.abspath(app_utils.shapefile_to_geojson(outlet_shp_fname + '.shp'))
-        test_string = test_string + 'Outlet shapefile detected. Converted to geojson at' + geojson_fullpath
-
-    if 'tif' in watershed_files:
-        lon_e, lat_s, lon_w, lat_n = app_utils.get_box_from_tif(watershed_files['tif'])
 
 
     table_query= app_utils.create_tethysTableView_simulationRecord(user_name)
 
-    # from .model import engine, Base, SessionMaker, model_calibration_table, model_inputs_table
-    # from sqlalchemy import inspect
-    # import sqlalchemy
-    # session = SessionMaker()  # Make session
-    #
-    # # qry1 = session.query(model_inputs_table).filter(model_inputs_table.simulation_name == 'simulation-1').delete()  # because PK is the same as no of rows, i.e. length
-    # # print 'deleted or not, ', qry1
-    # # test_string = qry1
-    #
-    # # qry = session.query(model_inputs_table.simulation_name).filter(model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
-    # # test_string = qry
-    # # print test_string
-    # # foo_col = sqlalchemy.sql.column('foo')
-    # # s = sqlalchemy.sql.select(['*']).where(foo_col == 1)
-    #
-    # model_input_rows = []
-    # model_input_cols = ('Simulation name', 'hs_res_id',  # 'start', 'end',
-    #                     'usgs gage', 'outlet X', 'outlet Y',
-    #                     'box_topY','box_bottomY','box_rightX','box_leftX',
-    #                     # 'model_engine', 'rain/et source',  'timestep',
-    #                     'stream threshold', 'Cell size',
-    #                     # 'remarks', 'user_option'
-    #                     )
-    # # model_input_cols = model_inputs_table.__table__.columns
-    #
-    # qry = session.query(model_inputs_table).filter(
-    #     model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
-    # test_string = model_input_cols  # .__getitem__()
-    # for row in qry:
-    #     test_string = round(float(row.box_topY), 3)
-    #     row_tuple = (row.simulation_name, row.hs_resource_id,  # row.simulation_start_date, row.simulation_end_date,
-    #                  row.USGS_gage, row.outlet_x, row.outlet_y,
-    #                  round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
-    #                  # row.model_engine,
-    #                  row.other_model_parameters.split('__')[0], row.other_model_parameters.split('__')[1],   #cell size
-    #                  # row.other_model_parameters.split('__')[2], row.other_model_parameters.split('__')[3], #timestep
-    #                  # ,row.remarks ,row.user_option
-    #                  )
-    #     model_input_rows.append(row_tuple)
-    #
-    # table_query = TableView(column_names=model_input_cols,
-    #                         rows=model_input_rows,
-    #                         hover=True,
-    #                         striped=True,
-    #                         bordered=False,
-    #                         condensed=True)
+
+    try:
+        hs = OAuthHS['hs']
+        user_name = OAuthHS.get('user_name')
+        client_id = OAuthHS.get('client_id')
+        client_secret = OAuthHS.get('client_secret')
+        token = OAuthHS.get('token')
+
+        test_string = 'user_name: %s , client_id: %s , client_secret: %s , token: %s ' % (
+        user_name, client_id, client_secret, token)
+    except:
+        print 'HydroShare login could not be authenticated'
+
+
+
 
     context = {
         'test_string1': test_string,
@@ -1382,11 +1270,40 @@ def model_input0(request):
 
     return render(request, 'hydrotop/model-input0.html', context)
 
+# get hs object through oauth
+def get_OAuthHS(request):
+    OAuthHS = {}
 
 
-# from django.shortcuts import render
-# from django.contrib.auth.decorators import login_required
-# from tethys_sdk.gizmos import AreaRange, TimeSeries
+    try:
+        hs_hostname = "www.hydroshare.org"
+
+        client_id = getattr(settings, "SOCIAL_AUTH_HYDROSHARE_KEY", None)
+        client_secret = getattr(settings, "SOCIAL_AUTH_HYDROSHARE_SECRET", None)
+
+        # this line will throw out from django.core.exceptions.ObjectDoesNotExist if current user is not signed in via HydroShare OAuth
+        token = request.user.social_auth.get(provider='hydroshare').extra_data['token_dict']
+        user_name = request.user.social_auth.get(provider='hydroshare').uid
+
+        auth = HydroShareAuthOAuth2(client_id, client_secret, token=token)
+        hs = HydroShare(auth=auth, hostname=hs_hostname)
+
+        OAuthHS['hs'] = hs
+        OAuthHS['token'] = token
+        OAuthHS['client_id'] = client_id
+        OAuthHS['client_secret'] = client_secret
+        OAuthHS['user_name'] = user_name
 
 
-# @login_required()
+    except ObjectDoesNotExist as e:
+        OAuthHS['error'] = 'ObjectDoesNotExist: ' + e.message
+    except TokenExpiredError as e:
+        OAuthHS['error'] = 'TokenExpiredError ' + e.message
+    except HydroShareNotAuthorized as e:
+        OAuthHS['error'] = 'HydroShareNotAuthorized' + e.message
+    except HydroShareNotFound as e:
+        OAuthHS['error'] = 'HydroShareNotFound' + e.message
+    except Exception as e:
+        OAuthHS['error'] = 'Authentication Failure:' + e.message
+
+    return OAuthHS
