@@ -708,34 +708,6 @@ def model_run(request):
         eta_ts_obj_loaded = app_utils.create_1d(timeseries_list=eta, label='Actual Evapotranspiration', unit='mm/day')
 
 
-
-        # db
-        try:
-            try:
-                data_qsim_qobs = zip([i[0] for i in hydrograph_series_sim], [i[-1] for i in hydrograph_series_sim],
-                                     [i[-1] for i in hydrograph_series_obs])
-            except:
-                data_qsim_qobs = zip([i[0] for i in hydrograph_series_sim], [i[-1] for i in hydrograph_series_sim])
-
-            # Writing to model_inputs_table
-            current_model_inputs_table_id = app_utils.get_model_input_id_for_hs_res_id(hs_resource_id_created)
-
-            # Writing to model_calibraiton_table (Because it is first record of the simulation)
-            # IF the model did not run, or if user just wants the files, we don't write to calibration table
-            current_model_calibration_table_id = app_utils.write_to_model_calibration_table(
-                model_input_table_id=current_model_inputs_table_id,
-                numeric_parameters_list=[pvs_t0_init, vo_t0_init, qc_t0_init, kc_init],
-                calibration_parameters_list=[fac_L_init, fac_Ks_init, fac_n_o_init, fac_n_c_init, fac_th_s_init])
-
-            # Writing to model_result_table :TODO change this, and write only error measuring the results?
-            current_model_result_table_id = app_utils.write_to_model_result_table(
-                model_calibration_table_id=current_model_calibration_table_id,
-                timeseries_discharge_list=data_qsim_qobs)
-
-        except Exception, e:
-            print "Error ---> Writing to DB", e
-
-
         # STEP2: Because in this part we load previous simulation, Load the model from hydroshare to hydroDS,
         # STEP2: And from the prepeared model, if the result is not available, run. Otherwise just give the result
         # hydrograph2, table_id = app_utils.run_model_with_input_as_dictionary(inputs_dictionary, False)
