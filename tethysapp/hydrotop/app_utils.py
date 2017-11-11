@@ -60,7 +60,6 @@ def create_model_input_dict_from_request(request):
                          "simulation_name": request.POST['simulation_name'],
                          "simulation_folder":'',
 
-
                         "simulation_start_date": request.POST['simulation_start_date_picker'],
                          "simulation_end_date": request.POST['simulation_end_date_picker'],
                          "USGS_gage": str(request.POST['USGS_gage']),
@@ -200,9 +199,9 @@ def create_model_input_dict_from_request(request):
         inputs_dictionary['pk_num_thershold'] = int(request.POST['pk_num_thershold'])
 
     if inputs_dictionary['model_engine'].lower() == 'topkapi':
-        inputs_dictionary['init_soil_percentsat'] = int(request.POST['init_soil_percentsat'])
-        inputs_dictionary['init_overland_vol'] = int(request.POST['init_overland_vol'])
-        inputs_dictionary['init_channel_flow'] = int(request.POST['init_channel_flow'])
+        inputs_dictionary['init_soil_percentsat'] = float(request.POST['init_soil_percentsat'])
+        inputs_dictionary['init_overland_vol'] = float(request.POST['init_overland_vol'])
+        inputs_dictionary['init_channel_flow'] = float(request.POST['init_channel_flow'])
 
     print 'inputs_dictionary', inputs_dictionary
     return inputs_dictionary
@@ -1054,7 +1053,8 @@ def write_to_model_input_table(inputs_dictionary, hs_resource_id=""):
 
     # one etnry / row
     one_run = model_inputs_table(user_name=user_name, simulation_name=simulation_name, hs_resource_id=hs_resource_id,
-                                 simulation_start_date=simulation_start_date, simulation_end_date=simulation_end_date,
+                                 simulation_start_date= datetime.datetime.strptime(simulation_start_date, "%m-%d-%Y") ,
+                                 simulation_end_date=datetime.datetime.strptime(simulation_end_date, "%m-%d-%Y") ,
                                  USGS_gage=USGS_gage,
                                  outlet_x=outlet_x, outlet_y=outlet_y, box_topY=box_topY, box_bottomY=box_bottomY,
                                  box_rightX=box_rightX, box_leftX=box_leftX,
@@ -1080,6 +1080,7 @@ def write_to_model_calibration_table(hs_resource_id=None, model_input_table_id=N
     :param model_input_table_id:      The foreign key
     :return:
     '''
+
     if numeric_parameters_list == None:
         numeric_parameters_list = [90.0, 100.0, 0, 1]
     if calibration_parameters_list == None:
@@ -1093,15 +1094,16 @@ def write_to_model_calibration_table(hs_resource_id=None, model_input_table_id=N
     numeric_parameters = '__'.join(numeric_parameters_list)
     calibration_parameters = '__'.join(calibration_parameters_list)
 
-    # :TODO write only when sim_name is different for a user
+
+
     from .model import engine, Base, SessionMaker, model_calibration_table, model_inputs_table
     session = SessionMaker()  # Make session
 
-    # calculate model_input_table_id
-    if model_input_table_id is None and hs_resource_id != None:
-        qry = session.query(model_inputs_table.id).filter(
-            model_inputs_table.hs_resource_id == hs_resource_id).all()  # because PK is the same as no of rows, i.e. length
-        model_input_table_id = qry[-1][0]
+    # # calculate model_input_table_id
+    # if model_input_table_id is None and hs_resource_id != None:
+    #     qry = session.query(model_inputs_table.id).filter(
+    #         model_inputs_table.hs_resource_id == hs_resource_id).all()  # because PK is the same as no of rows, i.e. length
+    #     model_input_table_id = qry[-1][0]
 
     # one etnry / row
     one_run = model_calibration_table(numeric_parameters=numeric_parameters,
@@ -1413,7 +1415,7 @@ def create_tethysTableView_simulationRecord(user_name):
 
 
     model_input_rows = []
-    model_input_cols = ('Simulation name', 'hs_res_id',  'start date', 'end date',
+    model_input_cols = ('input_table_id', 'Simulation name', 'hs_res_id',  'start date', 'end date',
                         'usgs gage', 'outlet X', 'outlet Y',
                         'box_topY','box_bottomY','box_rightX','box_leftX',
                         # 'model_engine', 'rain/et source',  'timestep',
@@ -1428,7 +1430,7 @@ def create_tethysTableView_simulationRecord(user_name):
     # REMEMBER: daymet__25__100__24
     for row in qry:
         test_string = round(float(row.box_topY), 3)
-        row_tuple = (row.simulation_name, row.hs_resource_id, row.simulation_start_date, row.simulation_end_date,
+        row_tuple = (row.id, row.simulation_name, row.hs_resource_id, row.simulation_start_date, row.simulation_end_date,
                      row.USGS_gage, row.outlet_x, row.outlet_y,
                      round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
                      # row.model_engine,
@@ -1459,9 +1461,18 @@ def create_tethysTableView_calibrationRecord( hs_resource_id):
     qry = session.query(model_calibration_table).filter( model_calibration_table.input_table_id == input_table_id).all()  # because PK is the same as no of rows, i.e. length
 
     rows = []
-    cols = ('Numeric parameters', 'calibration parameters')
+    # pvs_t0_init, vo_t0_init, qc_t0_init, kc_init
+    # fac_L_init, fac_Ks_init, fac_n_o_init, fac_n_c_init, fac_th_s_init
+    cols = ( 'calib_id', 'input_table_id',
+             'Soil cell: Initial saturation %', 'Overland cell: initial volume', 'Channel cell: initial flow' ,
+             'X-Factor: Soil depth','X-Factor: ksat','X-Factor: n overland','X-Factor: n channel','X-Factor: soil sat')
     for row in qry:
-        row_tuple = (row.numeric_parameters , row.calibration_parameters)
+        numeric_parameters = row.numeric_parameters.split("__")
+        calibration_parameters = row.calibration_parameters.split("__")
+
+        row_tuple = (row.id, row.input_table_id,
+                     numeric_parameters[0] , numeric_parameters[1] , numeric_parameters[2] , numeric_parameters[3] ,
+                     calibration_parameters[0],calibration_parameters[1],calibration_parameters[2],calibration_parameters[3],calibration_parameters[4])
         rows.append(row_tuple)
 
 

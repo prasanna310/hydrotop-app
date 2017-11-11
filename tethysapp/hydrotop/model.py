@@ -53,8 +53,8 @@ class model_inputs_table(Base):
         self.user_name = user_name
         self.simulation_name = simulation_name
         self.hs_resource_id = hs_resource_id
-        self.simulation_start_date_picker = simulation_start_date
-        self.simulation_end_date_picker = simulation_end_date
+        self.simulation_start_date = simulation_start_date
+        self.simulation_end_date = simulation_end_date
         self.USGS_gage = USGS_gage
 
         self.outlet_x = outlet_x

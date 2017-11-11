@@ -74,7 +74,7 @@ def model_input(request):
                    'init_soil_percentsat': '30'
                    },
 
-        'SantaCruz': {'simulation_name': 'SantaCruz_demo', 'USGS_gage': '11124500', 'cell_size': '100',
+        'SantaCruz': {'simulation_name': 'SantaCruz_demo', 'USGS_gage': '11124500', 'cell_size': '500',
                       't0': '10-01-2010',
                       't': '10-01-2011', 'threshold': '5', 'del_t': '24', 'x': '-119.90873', 'y': '34.59637',
                       'ymax': '34.714', 'xmax': '-119.781', 'ymin': '34.586', 'xmin': '-119.925',
@@ -932,37 +932,7 @@ def model_run(request):
         ppt_ts_obj_modified = app_utils.create_1d(timeseries_list=ppt, label='Rainfall', unit='mm/day')
         eta_ts_obj_modified = app_utils.create_1d(timeseries_list=eta, label='Actual Evapotranspiration', unit='mm/day')
 
-        # create input_dictionary for the last run. Because we are modifying, we need to load the last run
-        inputs_dictionary = app_utils.create_model_input_dict_from_db(
-            hs_resource_id=hs_resource_id_from_previous_simulation, user_name=user_name)
 
-        # Writing to db
-        try:
-            try:
-                data_qsim_qobs = zip([i[0] for i in hydrograph_series_sim], [i[-1] for i in hydrograph_series_sim],
-                                     [i[-1] for i in hydrograph_series_obs])
-            except:
-                data_qsim_qobs = zip([i[0] for i in hydrograph_series_sim], [i[-1] for i in hydrograph_series_sim])
-
-            # Writing to model_calibration_table
-            current_model_calibration_table_id = app_utils.write_to_model_calibration_table(
-                hs_resource_id=hs_resource_id_from_previous_simulation,
-                numeric_parameters_list=[pvs_t0_init, vo_t0_init, qc_t0_init,
-                                         kc_init],
-                calibration_parameters_list=[fac_L_init, fac_Ks_init,
-                                             fac_n_o_init, fac_n_c_init,
-                                             fac_th_s_init])
-            # Writing to model_result_table
-            current_model_result_table_id = app_utils.write_to_model_result_table(
-                model_calibration_table_id=current_model_calibration_table_id,
-                timeseries_discharge_list=data_qsim_qobs)
-
-
-        except Exception, e:
-            print "Error ---> Writing to DB", e
-
-
-            # # # -------DATABASE STUFFS  <ends> ----- # #
 
 
 
@@ -1112,7 +1082,7 @@ def test2(request):
 
 
     table_model_input= app_utils.create_tethysTableView_simulationRecord(user_name)
-    table_model_calibration = app_utils.create_tethysTableView_calibrationRecord(hs_resource_id='e5514be420da4c8c87ed63bdac0918e2')
+    table_model_calibration = app_utils.create_tethysTableView_calibrationRecord(hs_resource_id='9dfc6395a5cd4a359af4ed19063982f9') #dec1e833e39a45bb945d4ac8c231249e
 
     table_model_input_ALL = app_utils.create_tethysTableView_EntireRecord(table_name='model_input')
     table_model_calibration_ALL = app_utils.create_tethysTableView_EntireRecord(table_name='calibration')

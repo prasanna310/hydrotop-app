@@ -2931,6 +2931,53 @@ class HydroDS(object):
         return self._process_dataservice_response(response, save_as)
 
 
+    def runpytopkapi7(self, user_name, simulation_name, simulation_start_date, simulation_end_date, USGS_gage,
+                     timestep, threshold,
+                     mask_fname, overland_manning_fname, hillslope_fname, dem_fname, channel_network_fname,
+                     flowdir_fname,
+                     pore_size_dist_fname, bubbling_pressure_fname, resid_moisture_content_fname,
+                     sat_moisture_content_fname, conductivity_fname, soil_depth_fname,
+                     rain_fname, et_fname,
+                      init_soil_percentsat, init_overland_vol, init_channel_flow,
+                      timeseries_source='daymet', output_response_txt='pytopkpai_responseJSON.txt',  save_as=None):
+
+        if save_as:
+            self._validate_file_save_as(save_as)
+
+        url = self._get_dataservice_specific_url('runpytopkapi7')
+        payload = {'user_name': user_name, 'simulation_name': simulation_name,
+                   'simulation_start_date': simulation_start_date.replace('-','/'),
+                   'simulation_end_date': simulation_end_date.replace('-','/'),
+                   'USGS_gage': USGS_gage, 'timestep': timestep,
+                   'threshold': threshold,
+                   'hillslope_fname': hillslope_fname, 'dem_fname': dem_fname,
+                   'channel_network_fname': channel_network_fname, 'overland_manning_fname': overland_manning_fname,
+                   'mask_fname': mask_fname, 'flowdir_fname': flowdir_fname,
+                   'pore_size_dist_fname': pore_size_dist_fname,
+                   'bubbling_pressure_fname': bubbling_pressure_fname,
+                   'resid_moisture_content_fname': resid_moisture_content_fname,
+                   'sat_moisture_content_fname': sat_moisture_content_fname,
+                   'conductivity_fname': conductivity_fname, 'soil_depth_fname': soil_depth_fname,
+                   'rain_fname':rain_fname,
+                   'et_fname':et_fname,
+                   
+                   # init_channel_flow, init_overland_vol, init_soil_percentsat
+                   'init_soil_percentsat':init_soil_percentsat,
+                   'init_overland_vol': init_overland_vol,
+                   'init_channel_flow': init_channel_flow,
+
+                   # 'runoff_fname':runoff_fname ,
+                   # 'output_hs_rs_id_txt': output_hs_rs_id_txt
+                   }
+        payload['timeseries_source']=timeseries_source
+
+        self._is_file_name_valid(output_response_txt, ext='.txt')
+        payload['output_hs_rs_id_txt'] = output_response_txt
+
+
+
+        response = self._make_data_service_request(url=url, params=payload)
+        return self._process_dataservice_response(response, save_as)
 
     def modifypytopkapi(self,  fac_l, fac_ks, fac_n_o, fac_n_c,fac_th_s,
                 pvs_t0 ,vo_t0 ,qc_t0 ,kc,
