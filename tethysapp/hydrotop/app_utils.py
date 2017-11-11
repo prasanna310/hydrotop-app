@@ -1303,7 +1303,55 @@ def create_tethysGizmos_from_json(json_data):
     eta_ts_obj_loaded = create_1d(timeseries_list=eta, label='Actual Evapotranspiration', unit='mm/day')
 
 
+def create_tethysTableView_simulationRecord(user_name):
+    from tethys_sdk.gizmos import TableView
+    from .model import engine, Base, SessionMaker, model_calibration_table, model_inputs_table
+    from sqlalchemy import inspect
+    import sqlalchemy
+    session = SessionMaker()  # Make session
 
+    # qry1 = session.query(model_inputs_table).filter(model_inputs_table.simulation_name == 'simulation-1').delete()  # because PK is the same as no of rows, i.e. length
+    # print 'deleted or not, ', qry1
+    # test_string = qry1
+
+    # qry = session.query(model_inputs_table.simulation_name).filter(model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
+    # test_string = qry
+    # print test_string
+    # foo_col = sqlalchemy.sql.column('foo')
+    # s = sqlalchemy.sql.select(['*']).where(foo_col == 1)
+
+    model_input_rows = []
+    model_input_cols = ('Simulation name', 'hs_res_id',  # 'start', 'end',
+                        'usgs gage', 'outlet X', 'outlet Y',
+                        'box_topY','box_bottomY','box_rightX','box_leftX',
+                        # 'model_engine', 'rain/et source',  'timestep',
+                        'stream threshold', 'Cell size',
+                        # 'remarks', 'user_option'
+                        )
+    # model_input_cols = model_inputs_table.__table__.columns
+
+    qry = session.query(model_inputs_table).filter(
+        model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
+    test_string = model_input_cols  # .__getitem__()
+    for row in qry:
+        test_string = round(float(row.box_topY), 3)
+        row_tuple = (row.simulation_name, row.hs_resource_id,  # row.simulation_start_date, row.simulation_end_date,
+                     row.USGS_gage, row.outlet_x, row.outlet_y,
+                     round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
+                     # row.model_engine,
+                     row.other_model_parameters.split('__')[0], row.other_model_parameters.split('__')[1],   #cell size
+                     # row.other_model_parameters.split('__')[2], row.other_model_parameters.split('__')[3], #timestep
+                     # ,row.remarks ,row.user_option
+                     )
+        model_input_rows.append(row_tuple)
+
+    table_query = TableView(column_names=model_input_cols,
+                            rows=model_input_rows,
+                            hover=True,
+                            striped=True,
+                            bordered=False,
+                            condensed=True)
+    return table_query
 
 
 def loadpytopkapi(hs_res_id, out_folder=""):

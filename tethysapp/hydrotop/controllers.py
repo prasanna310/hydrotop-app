@@ -1133,165 +1133,58 @@ def test2(request):
     if 'tif' in watershed_files:
         lon_e, lat_s, lon_w, lat_n = app_utils.get_box_from_tif(watershed_files['tif'])
 
-    import datetime
 
-    hydrograph_series_sim = [[datetime.datetime(2010, 10, 2, 0, 0), 0.0], [datetime.datetime(2010, 10, 3, 0, 0), 1.113],
-                             [datetime.datetime(2010, 10, 4, 0, 0), 1.17],
-                             [datetime.datetime(2010, 10, 5, 0, 0), 1.356],
-                             [datetime.datetime(2010, 10, 6, 0, 0), 1.918], [datetime.datetime(2010, 10, 7, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 8, 0, 0), 0.0], [datetime.datetime(2010, 10, 9, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 10, 0, 0), 0.161],
-                             [datetime.datetime(2010, 10, 11, 0, 0), 2.627],
-                             [datetime.datetime(2010, 10, 12, 0, 0), 8.327],
-                             [datetime.datetime(2010, 10, 13, 0, 0), 43.355],
-                             [datetime.datetime(2010, 10, 14, 0, 0), 0.0], [datetime.datetime(2010, 10, 15, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 16, 0, 0), 0.0], [datetime.datetime(2010, 10, 17, 0, 0), 1.0],
-                             [datetime.datetime(2010, 10, 18, 0, 0), 1.178],
-                             [datetime.datetime(2010, 10, 19, 0, 0), 1.577],
-                             [datetime.datetime(2010, 10, 20, 0, 0), 4.973],
-                             [datetime.datetime(2010, 10, 21, 0, 0), 8.108],
-                             [datetime.datetime(2010, 10, 22, 0, 0), 0.0], [datetime.datetime(2010, 10, 23, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 24, 0, 0), 1.058],
-                             [datetime.datetime(2010, 10, 25, 0, 0), 20.553],
-                             [datetime.datetime(2010, 10, 26, 0, 0), 17.641],
-                             [datetime.datetime(2010, 10, 27, 0, 0), 5.0],
-                             [datetime.datetime(2010, 10, 28, 0, 0), 2.0], [datetime.datetime(2010, 10, 29, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 30, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 31, 0, 0), 1.122]]
-    hydrograph_series_obs = [[datetime.datetime(2010, 10, 2, 0, 0), 0.0], [datetime.datetime(2010, 10, 3, 0, 0), 0.113],
-                             [datetime.datetime(2010, 10, 4, 0, 0), 0.17],
-                             [datetime.datetime(2010, 10, 5, 0, 0), 0.356],
-                             [datetime.datetime(2010, 10, 6, 0, 0), 0.918], [datetime.datetime(2010, 10, 7, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 8, 0, 0), 0.0], [datetime.datetime(2010, 10, 9, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 10, 0, 0), 0.161],
-                             [datetime.datetime(2010, 10, 11, 0, 0), 2.627],
-                             [datetime.datetime(2010, 10, 12, 0, 0), 8.327],
-                             [datetime.datetime(2010, 10, 13, 0, 0), 13.355],
-                             [datetime.datetime(2010, 10, 14, 0, 0), 0.0], [datetime.datetime(2010, 10, 15, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 16, 0, 0), 0.0], [datetime.datetime(2010, 10, 17, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 18, 0, 0), 0.178],
-                             [datetime.datetime(2010, 10, 19, 0, 0), 1.577],
-                             [datetime.datetime(2010, 10, 20, 0, 0), 4.973],
-                             [datetime.datetime(2010, 10, 21, 0, 0), 8.108],
-                             [datetime.datetime(2010, 10, 22, 0, 0), 0.0], [datetime.datetime(2010, 10, 23, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 24, 0, 0), 1.058],
-                             [datetime.datetime(2010, 10, 25, 0, 0), 6.553],
-                             [datetime.datetime(2010, 10, 26, 0, 0), 17.641],
-                             [datetime.datetime(2010, 10, 27, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 28, 0, 0), 0.0], [datetime.datetime(2010, 10, 29, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 30, 0, 0), 0.0],
-                             [datetime.datetime(2010, 10, 31, 0, 0), 1.122]]
+    table_query= app_utils.create_tethysTableView_simulationRecord(user_name)
 
-    # json_data = app_utils.read_data_from_json('/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/598d95d552804c188e721a7762611399/output_response_txt.txt')
+    # from .model import engine, Base, SessionMaker, model_calibration_table, model_inputs_table
+    # from sqlalchemy import inspect
+    # import sqlalchemy
+    # session = SessionMaker()  # Make session
     #
-    # hydrograph_series_obs2 = json_data['hydrograph_series_obs']
-    # hydrograph_series_sim2 = json_data['hydrograph_series_sim']
-
-
-    observed_hydrograph = TimeSeries(
-        height='500px', width='500px', engine='highcharts', title=' Simulated Hydrograph ',
-        subtitle="Simulated and Observed flow for ",
-        y_axis_title='Discharge', y_axis_units='cfs',
-        series=[{
-            'name': 'Simulated Flow',
-            'data': hydrograph_series_sim
-        }])
-
-    observed_hydrograph2 = TimeSeries(
-        height='500px', width='500px', engine='highcharts', title=' Observed (Actual) Hydrograph ',
-        subtitle="Simulated and Observed flow for ",
-        y_axis_title='Discharge', y_axis_units='cfs',
-        series=[
-            {'name': 'Observed Flow',
-             'data': hydrograph_series_obs
-             }
-        ]
-    )
-
-   
-
-
-
-
-    # # print hydrograph_series_sim2
-    # print "*******************************"
-    # print "NOT working data type= ",type(hydrograph_series_obs2[0][0]), ' One such value=',  hydrograph_series_obs2[1], ' And the lenght=',  len(hydrograph_series_obs2),len(hydrograph_series_sim2)
-    # # multi_timeseries_plot = app_utils.plot_multiseries_hydrograph(obs_q=hydrograph_series_obs2, sim_q=hydrograph_series_sim2)
-
-    print "YES working data type= ", type(hydrograph_series_obs[0][0]), ' One such value=', hydrograph_series_obs[
-        0], ' And the lenght=', len(hydrograph_series_obs), len(hydrograph_series_sim)
-    # print hydrograph_series_obs
-    multi_timeseries_plot = TimeSeries(
-        height='500px',
-        width='500px',
-        engine='highcharts',
-        title='Multiple Timeseries Plot',
-        y_axis_title='Snow depth',
-        y_axis_units='m',
-        series=[{
-            'name': 'Simulated Hydrograph',
-            'data': hydrograph_series_sim,
-            # 'color': 'lightblue',
-            'fillOpacity': 0.2,
-        }, {
-            'name': 'Observed Hydrographhh',
-            'data': hydrograph_series_obs,
-            'fillOpacity': 0.2,
-            # 'color':'lightgrey'
-        }]
-    )
-
-    from .model import engine, Base, SessionMaker, model_calibration_table, model_inputs_table
-    from sqlalchemy import inspect
-    import sqlalchemy
-    session = SessionMaker()  # Make session
-
-    # qry1 = session.query(model_inputs_table).filter(model_inputs_table.simulation_name == 'simulation-1').delete()  # because PK is the same as no of rows, i.e. length
-    # print 'deleted or not, ', qry1
-    # test_string = qry1
-
-    # qry = session.query(model_inputs_table.simulation_name).filter(model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
-    # test_string = qry
-    # print test_string
-    # foo_col = sqlalchemy.sql.column('foo')
-    # s = sqlalchemy.sql.select(['*']).where(foo_col == 1)
-
-    model_input_rows = []
-    model_input_cols = ('Simulation name', 'hs_res_id',  # 'start', 'end',
-                        'usgs gage', 'outlet X', 'outlet Y',
-                        # 'box_topY','box_bottomY','box_rightX','box_leftX',
-                        'model_engine', 'rain/et source', 'stream threshold', 'X', 'timestep',
-                        # 'remarks', 'user_option'
-                        )
-    # model_input_cols = model_inputs_table.__table__.columns
-
-    qry = session.query(model_inputs_table).filter(
-        model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
-    test_string = model_input_cols  # .__getitem__()
-    for row in qry:
-        # test_string = 'ROW: Type %s, Itself: %s '%(type(row) , row.__getitem__() )
-        row_tuple = (row.simulation_name, row.hs_resource_id,  # row.simulation_start_date, row.simulation_end_date,
-                     row.USGS_gage, row.outlet_x, row.outlet_y,
-                     # row.box_topY,row.box_bottomY,row.box_rightX, row.box_leftX,
-                     row.model_engine,
-                     row.other_model_parameters.split('__')[0], row.other_model_parameters.split('__')[1],
-                     row.other_model_parameters.split('__')[2], row.other_model_parameters.split('__')[3],
-                     # ,row.remarks ,row.user_option
-                     )
-        model_input_rows.append(row_tuple)
-
-    table_query = TableView(column_names=model_input_cols,
-                            rows=model_input_rows,
-                            hover=True,
-                            striped=True,
-                            bordered=False,
-                            condensed=True)
+    # # qry1 = session.query(model_inputs_table).filter(model_inputs_table.simulation_name == 'simulation-1').delete()  # because PK is the same as no of rows, i.e. length
+    # # print 'deleted or not, ', qry1
+    # # test_string = qry1
+    #
+    # # qry = session.query(model_inputs_table.simulation_name).filter(model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
+    # # test_string = qry
+    # # print test_string
+    # # foo_col = sqlalchemy.sql.column('foo')
+    # # s = sqlalchemy.sql.select(['*']).where(foo_col == 1)
+    #
+    # model_input_rows = []
+    # model_input_cols = ('Simulation name', 'hs_res_id',  # 'start', 'end',
+    #                     'usgs gage', 'outlet X', 'outlet Y',
+    #                     'box_topY','box_bottomY','box_rightX','box_leftX',
+    #                     # 'model_engine', 'rain/et source',  'timestep',
+    #                     'stream threshold', 'Cell size',
+    #                     # 'remarks', 'user_option'
+    #                     )
+    # # model_input_cols = model_inputs_table.__table__.columns
+    #
+    # qry = session.query(model_inputs_table).filter(
+    #     model_inputs_table.user_name == user_name).all()  # because PK is the same as no of rows, i.e. length
+    # test_string = model_input_cols  # .__getitem__()
+    # for row in qry:
+    #     test_string = round(float(row.box_topY), 3)
+    #     row_tuple = (row.simulation_name, row.hs_resource_id,  # row.simulation_start_date, row.simulation_end_date,
+    #                  row.USGS_gage, row.outlet_x, row.outlet_y,
+    #                  round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
+    #                  # row.model_engine,
+    #                  row.other_model_parameters.split('__')[0], row.other_model_parameters.split('__')[1],   #cell size
+    #                  # row.other_model_parameters.split('__')[2], row.other_model_parameters.split('__')[3], #timestep
+    #                  # ,row.remarks ,row.user_option
+    #                  )
+    #     model_input_rows.append(row_tuple)
+    #
+    # table_query = TableView(column_names=model_input_cols,
+    #                         rows=model_input_rows,
+    #                         hover=True,
+    #                         striped=True,
+    #                         bordered=False,
+    #                         condensed=True)
 
     context = {
         'test_string1': test_string,
-        'observed_hydrograph': observed_hydrograph,
-        'observed_hydrograph2': observed_hydrograph2,
-        'multi_timeseries_plot': multi_timeseries_plot,
 
         'table_query': table_query,
 
