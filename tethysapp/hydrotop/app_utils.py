@@ -191,6 +191,12 @@ def create_model_input_dict_from_request(request):
             # update the input dictionary
             inputs_dictionary['outlet_x'], inputs_dictionary['outlet_y'] = round(lon, 6), round(lat, 6)
 
+    # if user draws from left side, make adjustments
+    if inputs_dictionary['box_bottomY'] > inputs_dictionary['box_topY']:
+        inputs_dictionary['box_bottomY'], inputs_dictionary['box_topY'] = inputs_dictionary['box_topY'], inputs_dictionary['box_bottomY']
+
+    if inputs_dictionary['box_rightX'] < inputs_dictionary['box_leftX']:
+        inputs_dictionary['box_rightX'], inputs_dictionary['box_leftX'] = inputs_dictionary['box_leftX'], inputs_dictionary['box_rightX']
 
     if inputs_dictionary['model_engine'].lower() == 'topnet':
         inputs_dictionary['threshold_topnet'] = int(request.POST['threshold_topnet'])
@@ -589,7 +595,7 @@ def create_simulation_list_after_querying_db(given_user_name=None, return_hs_res
         if len(queries)<= 1:
             print 'Error in reading database, length only 1'
             stop
-        print '**************Success: Querying the db to create a list of existing simulation'
+        print 'Success: Querying the db to create a list of existing simulation'
 
     except Exception,e:
         queries = [( 'No saved model', '44248166e239490383f23f6568de5fcf')]
@@ -620,10 +626,10 @@ def get_box_from_tif_or_shp(fname):
 
     print 'json form raster: ', json_data
 
-    maxx = json_data['maxx']
-    miny= json_data['miny']
-    minx=json_data['minx']
-    maxy =json_data['maxy']
+    maxx = float(json_data['maxx'])
+    miny= float(json_data['miny'])
+    minx=float(json_data['minx'])
+    maxy =float(json_data['maxy'])
 
     return maxx, miny, minx, maxy
 
@@ -1418,7 +1424,7 @@ def create_tethysTableView_simulationRecord(user_name):
     model_input_cols = ('input_table_id', 'Simulation name', 'hs_res_id',  'start date', 'end date',
                         'usgs gage', 'outlet X', 'outlet Y',
                         'box_topY','box_bottomY','box_rightX','box_leftX',
-                        # 'model_engine', 'rain/et source',  'timestep',
+                        'model_engine', #'rain/et source',  'timestep',
                         'Cell size','stream threshold',
                         # 'remarks', 'user_option'
                         )
@@ -1433,7 +1439,7 @@ def create_tethysTableView_simulationRecord(user_name):
         row_tuple = (row.id, row.simulation_name, row.hs_resource_id, row.simulation_start_date, row.simulation_end_date,
                      row.USGS_gage, row.outlet_x, row.outlet_y,
                      round(row.box_topY, 3),round(row.box_bottomY, 3),round(row.box_rightX, 3), round(row.box_leftX, 3),
-                     # row.model_engine,
+                     row.model_engine,
                      row.other_model_parameters.split('__')[2],  # REMEMBER: daymet__25__100__24
                      row.other_model_parameters.split('__')[1],  # REMEMBER: daymet__25__100__24
                      # row.other_model_parameters.split('__')[2], row.other_model_parameters.split('__')[3], #timestep

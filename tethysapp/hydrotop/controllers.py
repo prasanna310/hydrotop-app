@@ -130,12 +130,6 @@ def model_input(request):
                                     initial=['Daymet'],
                                     original=['Daymet'])
 
-    # model_engine = SelectInput(display_text='Choose an action',
-    #             name='model_engine',
-    #             multiple=False,
-    #             options=[('TOPKAPI', 'TOPKAPI'), ('TOPNET is amazing', 'TOPNET')],
-    #             initial=['TOPKAPI'],
-    #             original=['TOPKAPI'])
 
     model_engine = SelectInput(display_text='Choose an action',
                                name='model_engine',
@@ -164,7 +158,6 @@ def model_input(request):
     existing_sim_res_id = TextInput(display_text='', name='existing_sim_res_id', initial='')
 
     form_error = ""
-    observed_hydrograph = ""
     test_function_response = ""
     geojson_files = {}
     geojson_outlet = 'Default'
@@ -196,30 +189,12 @@ def model_input(request):
             np.savetxt("/a%s.txt" % form_error, np.array([1, 1]))
 
         if validation_status:
-            # hydrograpph series is a series (list) object.
-            # table_id is the id of the data just written in the database after the successful model run
-            hydrograph_series = []
-            # hydrograph_series, table_id = app_utils.run_model_with_input_as_dictionary(inputs_dictionary,False, simulation_folder="")
+            pass
 
-
-            observed_hydrograph = TimeSeries(
-                height='500px',
-                width='500px',
-                engine='highcharts',
-                title='Hydrograph ',
-                subtitle="Simulated and Observed flow for " + inputs_dictionary['simulation_name'],
-                y_axis_title='Discharge',
-                y_axis_units='cumecs',
-                series=[{
-                    'name': 'Simulated Flow',
-                    'data': hydrograph_series,
-                }]
-            )
 
     context = {
 
         'test_function_response': test_function_response,
-        "observed_hydrograph": observed_hydrograph,
 
         'simulation_name': simulation_name,
         'cell_size': cell_size,
