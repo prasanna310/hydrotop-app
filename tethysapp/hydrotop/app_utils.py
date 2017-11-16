@@ -39,12 +39,14 @@ def zipdir(path, ziph):
             ziph.write(os.path.join(root, file))
 
 
-def create_model_input_dict_from_request(request):
+def create_model_input_dict_from_request(request,user_name ):
     # from the user input forms in model_input page, the request is converted to a dictionary of inputs
     print request.user.username
     from django.core.files.storage import default_storage
     from django.core.files.base import ContentFile
     from django.conf import settings
+
+
 
     buffer_on_bbox_from_file = 0 # times the cell size
     test_string = 'None'
@@ -56,7 +58,7 @@ def create_model_input_dict_from_request(request):
     watershed_files = {}
     outlet_files = {}
 
-    inputs_dictionary = {"user_name": request.user.username,
+    inputs_dictionary = {"user_name": user_name,
                          "simulation_name": request.POST['simulation_name'],
                          "simulation_folder":'',
 

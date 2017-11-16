@@ -37,6 +37,8 @@ def home(request):
 # init_channel_flow, init_overland_vol, init_soil_percentsat
 def model_input(request):
     user_name = request.user.username
+    OAuthHS = get_OAuthHS(request)
+    user_name = OAuthHS['user_name']
 
     # Define Gizmo Options
     # from .model import engine, SessionMaker, Base, model_inputs_table, model_calibration_table
@@ -249,6 +251,7 @@ def model_run(request):
     """
     user_name = request.user.username
     OAuthHS = get_OAuthHS(request)
+    user_name = OAuthHS['user_name']
 
     # model_input_load_request = hs_resource_id_loaded = request.GET.get('res_id', None)
 
@@ -374,7 +377,7 @@ def model_run(request):
 
             print 'download_choice(s)=', download_choice
 
-            inputs_dictionary = app_utils.create_model_input_dict_from_request(request)
+            inputs_dictionary = app_utils.create_model_input_dict_from_request(request, user_name)
 
             json_data = { u'output_response_txt': u'http://129.123.9.159:20199/files/data/user_6/eg-metadata.txt',
                           u'output_zipfile': u'http://129.123.9.159:20199/files/data/user_6/eg-output.zip',
@@ -402,7 +405,7 @@ def model_run(request):
         elif model_engine_chosen.lower() == 'topnet':
             print 'User action: TOPNET'
 
-            inputs_dictionary = app_utils.create_model_input_dict_from_request(request)
+            inputs_dictionary = app_utils.create_model_input_dict_from_request(request, user_name)
 
             json_data = { u'output_response_txt': u'http://129.123.9.159:20199/files/data/user_6/eg-metadata.txt',
                           u'download_link': u'http://129.123.9.159:20199/files/data/user_6/eg-output.zip',
@@ -431,7 +434,7 @@ def model_run(request):
             print 'User action: topkapi'
 
             # # Method (1), STEP (1): get input dictionary from request ( request I)
-            inputs_dictionary = app_utils.create_model_input_dict_from_request(request)
+            inputs_dictionary = app_utils.create_model_input_dict_from_request(request, user_name)
             test_string = str("Prepared  Values: ") + str(inputs_dictionary)
             simulation_name = inputs_dictionary['simulation_name']
             print "MSG: Inputs from user read"
@@ -1045,13 +1048,12 @@ def google_map_input(request):
 
 
 def test2(request):
-
+    user_name1 = request.user.username
     OAuthHS = get_OAuthHS(request)
 
-    user_name = request.user.username
+    user_name = OAuthHS['user_name']
 
     test_string = 'None'
-
 
     table_model_input= app_utils.create_tethysTableView_simulationRecord(user_name)
     table_model_calibration = app_utils.create_tethysTableView_calibrationRecord(hs_resource_id='9dfc6395a5cd4a359af4ed19063982f9') #dec1e833e39a45bb945d4ac8c231249e
@@ -1069,10 +1071,9 @@ def test2(request):
         token = OAuthHS.get('token'); test_string = token
 
         test_string = '''
-        user_name: %s , 
-        client_id: %s , 
-        client_secret: %s , 
-        token: %s ''' % ( user_name, client_id, client_secret, json.dumps(token))
+        user_name: %s ,
+        hs_username: %s 
+        ''' % (user_name1, user_name)
     except:
         print 'HydroShare login could not be authenticated'
 

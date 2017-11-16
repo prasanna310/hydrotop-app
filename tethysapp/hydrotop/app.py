@@ -14,7 +14,7 @@ class Hydrotop(TethysAppBase):
     root_url = 'hydrotop'
     color = 'blue'
     description = 'Model instance for TOPKAPI, model input for TOPNET, and downloading hydrologic ataset'
-    tags = '"USU"' #"Hydrology", "topkapi", "topnet", "TauDEM", 
+    tags = '"USU"' #"Hydrology", "topkapi", "topnet", "TauDEM",
     enable_feedback = False
     feedback_emails = []
 
