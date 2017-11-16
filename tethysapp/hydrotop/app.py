@@ -9,12 +9,12 @@ class Hydrotop(TethysAppBase):
 
     name = 'HydroTop'
     index = 'hydrotop:home'
-    icon = 'hydrotop/images/icon.gif'
+    icon = 'hydrotop/images/icon.jpg'
     package = 'hydrotop'
     root_url = 'hydrotop'
-    color = '#e67e22'
+    color = 'blue'
     description = 'Model instance for TOPKAPI, model input for TOPNET, and downloading hydrologic ataset'
-    tags = '"Hydrology", "topkapi", "topnet", "terrain analysis", "TauDEM", "watershed delineation", "hydrotop", "modeling", "reference ET", "evapotranspiration", "daymet", "climate files", "forcing files", "ssurgo", "soil files", "saturated hydraulic conductivity", "porosity", "residual soil moisture content", "gssurgo", "terrain analysis", "bubbling pressure", "pore size distribution","USU", "UWRL", "Utah State University", "hydroshare"'
+    tags = '"Hydrology", "topkapi", "topnet", "TauDEM",  "USU"'
     enable_feedback = False
     feedback_emails = []
 
@@ -51,7 +51,9 @@ class Hydrotop(TethysAppBase):
                            url='hydrotop/model_input0',
                            controller='hydrotop.controllers.model_input0'),
 
-
+                    UrlMap(name='model_input1',
+                           url='hydrotop/model_input1',
+                           controller='hydrotop.controllers.model_input1'),
         )
 
         return url_maps

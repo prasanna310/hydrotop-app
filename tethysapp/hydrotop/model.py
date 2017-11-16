@@ -25,7 +25,7 @@ class model_inputs_table(Base):
     hs_resource_id = Column(Text)
     simulation_start_date = Column(Date)
     simulation_end_date = Column(Date)
-    USGS_gage = Column(Integer)
+    USGS_gage = Column(Text)
 
     outlet_x = Column(Float)
     outlet_y = Column(Float)

@@ -1,12 +1,5 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-
-# from .model import SessionMaker
-# from tethys_gizmos.gizmo_options import TextInput, DatePicker
-# from tethys_sdk.gizmos import SelectInput
-# from tethys_sdk.gizmos import TimeSeries, AreaRange, PlotView, LinePlot
-# import datetime
-
 from django.http import HttpResponse
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -81,7 +74,7 @@ def model_input(request):
                       'init_soil_percentsat': '30'},
 
 
-        'SantaMaria': {'simulation_name': 'SANTA_MARIA_CA_201011', 'USGS_gage': '11028500', 'cell_size': '100',
+        'SanMarcos': {'simulation_name': 'SANMARCOS_TX_2010', 'USGS_gage': '11028500', 'cell_size': '100',
                        't0': '10-01-2010',
                        't': '10-01-2011', 'threshold': '15', 'del_t': '24', 'x': '-116.9455844', 'y': '33.0522655',
                        'ymax': '30.213', 'xmax': '-97.956', 'ymin': '30.027', 'xmin': '-97.99',
@@ -1065,22 +1058,23 @@ def test2(request):
     # table_model_result_ALL  = app_utils.create_tethysTableView_EntireRecord(table_name='result') # this will slow down the computer
 
     try:
-        hs = OAuthHS['hs']
-        user_name = OAuthHS.get('user_name')
-        client_id = OAuthHS.get('client_id')
-        client_secret = OAuthHS.get('client_secret')
-        token = OAuthHS.get('token')
+        # hs = OAuthHS['hs']
+        user_name = OAuthHS.get('user_name'); test_string = user_name
+        client_id = OAuthHS.get('client_id'); test_string = client_id
+        client_secret = OAuthHS.get('client_secret'); test_string = client_secret
+        token = OAuthHS.get('token'); test_string = token
 
         test_string = 'user_name: %s , client_id: %s , client_secret: %s , token: %s ' % (
         user_name, client_id, client_secret, token)
     except:
         print 'HydroShare login could not be authenticated'
 
-
+    test_string2 = getattr(settings, "SESSION_COOKIE_AGE", None)
 
 
     context = {
         'test_string1': test_string,
+        'test_string2': test_string2,
 
         'table_model_input': table_model_input,
         'table_model_calibration': table_model_calibration,
@@ -1276,6 +1270,197 @@ def model_input0(request):
     }
 
     return render(request, 'hydrotop/model-input0.html', context)
+
+
+def model_input1(request):
+    user_name = request.user.username
+
+    # Define Gizmo Options
+    # from .model import engine, SessionMaker, Base, model_inputs_table, model_calibration_table
+
+    # Query DB for gage objects, all the entries by the user name
+    # give the value for thsi variable = 0 if the program is starting for the first time
+    simulation_names_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
+
+    # init_channel_flow, init_overland_vol, init_soil_percentsat
+    # # intials
+    watershed_name = 'SantaCruz'  # 'RBC' , 'Santa Cruz', 'Barrow Creeks', 'Plunge' , Logan
+    initials = {
+
+        'Logan': {'simulation_name': 'Logan_sample', 'USGS_gage': '10109000', 'cell_size': '30', 't0': '10-01-2010',
+                  't': '10-30-2010', 'threshold': '25', 'del_t': '24', 'x': '-111.7836', 'y': '41.7436',
+                  'ymax': '42.12', 'xmax': '-111.44', 'ymin': '41.68', 'xmin': '-111.83' ,
+                  'init_soil_percentsat':'30' },
+
+        'RBC': {'simulation_name': 'RBC_sample', 'USGS_gage': '10172200', 'cell_size': '100', 't0': '10-01-2010',
+                't': '10-03-2011', 'threshold': '2', 'del_t': '24', 'x': '-111.80624', 'y': '40.77968',
+                'ymax': '40.8327', 'xmax': '-111.728', 'ymin': '40.772', 'xmin': '-111.834',
+                'init_soil_percentsat': '30'},
+
+        'Plunge': {'simulation_name': 'Plunge_demo', 'USGS_gage': '11055500', 'cell_size': '100', 't0': '10-01-2010',
+                   't': '10-01-2011', 'threshold': '5', 'del_t': '24', 'x': '-117.141284', 'y': '34.12128',
+                   # 'ymax':'34.2336', 'xmax': '-117.048046', 'ymin': '34.10883', 'xmin': '-117.168289',
+                   'ymax': '34.213', 'xmax': '-117.062', 'ymin': '34.10883', 'xmin': '-117.18',
+                   'init_soil_percentsat': '30'
+                   },
+
+        'SantaCruz': {'simulation_name': 'SantaCruz_demo', 'USGS_gage': '11124500', 'cell_size': '500',
+                      't0': '10-01-2010',
+                      't': '10-01-2011', 'threshold': '5', 'del_t': '24', 'x': '-119.90873', 'y': '34.59637',
+                      'ymax': '34.714', 'xmax': '-119.781', 'ymin': '34.586', 'xmin': '-119.925',
+                      'init_soil_percentsat': '30'},
+
+
+        'SanMarcos': {'simulation_name': 'SANMARCOS_TX_2010', 'USGS_gage': '11028500', 'cell_size': '100',
+                       't0': '10-01-2010',
+                       't': '10-01-2011', 'threshold': '15', 'del_t': '24', 'x': '-116.9455844', 'y': '33.0522655',
+                       'ymax': '30.213', 'xmax': '-97.956', 'ymin': '30.027', 'xmin': '-97.99',
+                       'init_soil_percentsat': '30'},
+
+    }
+
+    simulation_name = TextInput(display_text='Simulation name', name='simulation_name',
+                                initial=initials[watershed_name]['simulation_name'])
+    USGS_gage = TextInput(display_text='USGS gage nearby', name='USGS_gage',
+                          initial=initials[watershed_name]['USGS_gage'])
+    cell_size = TextInput(display_text='Cell size in meters', name='cell_size',
+                          initial=initials[watershed_name]['cell_size'])
+    timestep = TextInput(display_text='Timestep in hrs', name='timestep',
+                         initial=initials[watershed_name]['del_t'])  # , append="hours"
+    simulation_start_date_picker = DatePicker(name='simulation_start_date_picker', display_text='Start Date',
+                                              autoclose=True, format='mm-dd-yyyy', start_date='10-15-2005',
+                                              # '01-01-2010'
+                                              start_view='year', today_button=True,
+                                              initial=initials[watershed_name]['t0'])
+    simulation_end_date_picker = DatePicker(name='simulation_end_date_picker', display_text='End Date',
+                                            autoclose=True, format='mm-dd-yyyy', start_date='10-15-2005',
+                                            # '01-01-2010'
+                                            start_view='year', today_button=False,
+                                            initial=initials[watershed_name]['t'])
+    threshold = TextInput(display_text='Stream threshold in square km', name='threshold',
+                          initial=initials[watershed_name]['threshold'])
+
+
+    init_soil_percentsat = TextInput(display_text='Intial saturation in soil cells (in %) ', name='init_soil_percentsat',
+                          initial=initials[watershed_name]['init_soil_percentsat'])
+    init_overland_vol = TextInput(display_text='Intial volume of water in overland cells (in m3) ', name='init_overland_vol',
+                          initial=str(  0.0003* float(initials[watershed_name]['cell_size'])**2  ))
+    init_channel_flow = TextInput(display_text='Intial flow of water in channel cells (in m3/s) ', name='init_channel_flow',
+                          initial=str( float(initials[watershed_name]['cell_size']) * .001) )
+
+    threshold_topnet = TextInput(display_text='Stream threshold', name='threshold_topnet', initial=100)
+    pk_min_threshold = TextInput(display_text='pk_min_threshold', name='pk_min_threshold', initial=500)
+    pk_max_threshold = TextInput(display_text='pk_max_threshold', name='pk_max_threshold', initial=50000)
+    pk_num_thershold = TextInput(display_text='pk_num_thershold', name='pk_num_thershold', initial=12)
+
+    timeseries_source = SelectInput(display_text='Forcing source',
+                                    name='timeseries_source',
+                                    multiple=False,
+                                    options=[('Daymet', 'Daymet'), ('UEB', 'UEB')],
+                                    initial=['Daymet'],
+                                    original=['Daymet'])
+
+
+    model_engine = SelectInput(display_text='Choose an action',
+                               name='model_engine',
+                               multiple=False,
+                               options=[('Download geospatial files', 'download'), ('Prepare TOPKAPI model', 'TOPKAPI'),
+                                        ('Prepare TOPNET input-files', 'TOPNET')],
+                               initial=['TOPKAPI'],
+                               original=['TOPKAPI']
+                               )
+
+    # # html form to django form
+
+    # (Any Watershed)
+    outlet_x = TextInput(display_text='Longitude', name='outlet_x',
+                         initial=initials[watershed_name]['x'])  # 41.74025, -111.7915
+    outlet_y = TextInput(display_text='Latitude', name='outlet_y', initial=initials[watershed_name]['y'])
+
+    box_topY = TextInput(display_text='North Y', name='box_topY', initial=initials[watershed_name]['ymax'])
+    box_rightX = TextInput(display_text='East X', name='box_rightX', initial=initials[watershed_name]['xmax'])
+    box_bottomY = TextInput(display_text='South Y', name='box_bottomY', initial=initials[watershed_name]['ymin'])
+    box_leftX = TextInput(display_text='West X', name='box_leftX', initial=initials[watershed_name]['xmin'])
+
+    outlet_hs = TextInput(display_text='', name='outlet_hs', initial='')
+    bounding_box_hs = TextInput(display_text='', name='bounding_box_hs', initial='')
+
+    existing_sim_res_id = TextInput(display_text='', name='existing_sim_res_id', initial='')
+
+    form_error = ""
+    test_function_response = ""
+    geojson_files = {}
+    geojson_outlet = 'Default'
+    geojson_domain = 'Default'
+    table_id = 0
+    validation_status = True
+
+    # this does not work now. Because the request is sent to model-run page
+    # when it receives request. This is not in effect. Currently, the request is sent to model_run, not model_input.html
+    if request.is_ajax and request.method == 'POST':
+        try:
+            validation_status, form_error, inputs_dictionary, geojson_files = app_utils.validate_inputs(
+                request)  # input_dictionary has proper data type. Not everything string
+
+            if form_error.startswith("Error 2") or form_error.startswith(
+                    "Error 3"):  # may not need this part. Because if no shapefile input, will not read it
+                form_error = ""
+
+        except Exception, e:
+            if form_error.startswith("Error 2") or form_error.startswith(
+                    "Error 3"):  # may not need this part. Because if no shapefile input, will not read it
+                form_error = ""
+            else:
+                form_error = "Error 0: " + str(e)
+
+        if not validation_status:
+            # useless code. If the file is prepared, we know validatoin status = False
+            import numpy as np
+            np.savetxt("/a%s.txt" % form_error, np.array([1, 1]))
+
+        if validation_status:
+            pass
+
+
+    context = {
+
+        'test_function_response': test_function_response,
+
+        'simulation_name': simulation_name,
+        'cell_size': cell_size,
+        'timestep': timestep,
+        'simulation_start_date_picker': simulation_start_date_picker,
+        'simulation_end_date_picker': simulation_end_date_picker,
+        'timeseries_source': timeseries_source,
+        'threshold': threshold,
+        'USGS_gage': USGS_gage,
+        'model_engine': model_engine,
+        'gage_id': id,
+        'outlet_x': outlet_x, 'outlet_y': outlet_y,
+        'box_topY': box_topY, 'box_rightX': box_rightX, 'box_leftX': box_leftX, 'box_bottomY': box_bottomY,
+        'simulation_names_list': simulation_names_list,
+        'existing_sim_res_id': existing_sim_res_id,
+        'outlet_hs': outlet_hs,
+        'bounding_box_hs': bounding_box_hs,
+
+        'form_error': form_error,
+        'validation_status': validation_status,
+        'model_inputs_table_id': table_id,
+        'geojson_outlet': geojson_outlet,
+        'geojson_domain': geojson_files,
+
+        'init_soil_percentsat':init_soil_percentsat,
+        'init_overland_vol': init_overland_vol,
+        'init_channel_flow': init_channel_flow,
+
+        'threshold_topnet': threshold_topnet,
+        'pk_min_threshold': pk_min_threshold,
+        'pk_max_threshold': pk_max_threshold,
+        'pk_num_thershold': pk_num_thershold,
+    }
+
+    return render(request, 'hydrotop/model_input1.html', context)
+
 
 # get hs object through oauth
 def get_OAuthHS(request):
