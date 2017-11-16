@@ -716,7 +716,7 @@ def pull_from_hydroshare(hs_resource_id=None, output_folder=None):
     return return_dict
 
 
-def push_topnet_to_hydroshare(simulation_name=None, data_folder=None,  hs_usr_name=None, hs_password=None, hs_client_id=None, hs_client_secret=None, token=None):
+def push_topnet_to_hydroshare(OAuthHS, simulation_name=None, data_folder=None):
     # sys.path.append('/home/prasanna/Documents/hydroshare-jupyterhub-master/notebooks/utilities')
     print ('Progress --> Pushing files to HydroShare. This could take a while...')
     # from hs_restclient import HydroShare, HydroShareAuthBasic
@@ -726,20 +726,15 @@ def push_topnet_to_hydroshare(simulation_name=None, data_folder=None,  hs_usr_na
     from hs_restclient import HydroShare, HydroShareAuthBasic, HydroShareAuthOAuth2
     # create resource
 
-    if hs_client_id != None and hs_client_secret != None and token != None:
-        token = json.loads(token)
-        auth = HydroShareAuthOAuth2(hs_client_id, hs_client_secret, token=token)
-        hs = HydroShare(auth=auth, hostname='www.hydroshare.org')
+    hs_client_id = OAuthHS['client_id']
+    hs_client_secret = OAuthHS['client_secret']
+    token = json.dumps(OAuthHS['token'])
+    hs_username = OAuthHS['user_name']
 
-    elif hs_usr_name != None and hs_password != None:
-        auth = HydroShareAuthBasic(hs_usr_name, hs_password)
-        hs = HydroShare(auth=auth, hostname='www.hydroshare.org')
-    else:
-        auth = HydroShareAuthBasic(username='topkapi_app', password='topkapi12!@')
-        hs = HydroShare(auth=auth)
 
-        # return {'success': "False",
-        #         'message': "Authentication to HydroShare is failed. Please provide HydroShare User information"}
+    auth = HydroShareAuthOAuth2(hs_client_id, hs_client_secret, token=token)
+    hs = HydroShare(auth=auth, hostname='www.hydroshare.org')
+
 
 
     abstract = 'Input-files for TOPNET model '  # abstract for the new resource
@@ -1492,11 +1487,11 @@ def create_tethysTableView_calibrationRecord( hs_resource_id):
 
 
 
-def loadpytopkapi(hs_res_id, out_folder=""):
+def loadpytopkapi(hs_res_id, OAuthHS, out_folder=""):
             # output_hs_rs_id_txt='pytopkpai_model_files_metadata.txt',output_q_sim_txt='output_q_sim_retreived.txt',  output_response_txt = 'output_response_json.txt'
 
 
-    run_model_call = HDS.loadpytopkapi(hs_res_id= hs_res_id)
+    run_model_call = HDS.loadpytopkapi(hs_res_id= hs_res_id,  OAuthHS=OAuthHS)
 
 
     if out_folder == "":
@@ -1511,11 +1506,13 @@ def loadpytopkapi(hs_res_id, out_folder=""):
     return out_folder + '/' + os.path.basename(responseJSON)  # ,      out_folder + '/' + os.path.basename(hydrograph_txt_file)
 
 
-def modifypytopkapi(hs_res_id, out_folder="",  fac_l=1.0, fac_ks=1.0, fac_n_o=1.0, fac_n_c=1.0,fac_th_s=1.0,
+def modifypytopkapi(hs_res_id, OAuthHS, out_folder="",  fac_l=1.0, fac_ks=1.0, fac_n_o=1.0, fac_n_c=1.0,fac_th_s=1.0,
                     pvs_t0=80.0 ,vo_t0=0.0 ,qc_t0=0.0 ,kc=1.0 ): #, output_response_txt = 'output_response_json.txt'):
 
     run_model_call = HDS.modifypytopkapi(fac_l=fac_l, fac_ks=fac_ks, fac_n_o=fac_n_o, fac_n_c=fac_n_c,fac_th_s=fac_th_s,
-                                         pvs_t0=pvs_t0 ,vo_t0 =vo_t0 ,qc_t0=qc_t0 ,kc = kc, hs_res_id=hs_res_id  )
+                                         pvs_t0=pvs_t0 ,vo_t0 =vo_t0 ,qc_t0=qc_t0 ,kc = kc, hs_res_id=hs_res_id ,
+                                         OAuthHS=OAuthHS
+                                         )
 
     print 'run_model_call =', run_model_call
 
@@ -1531,7 +1528,7 @@ def modifypytopkapi(hs_res_id, out_folder="",  fac_l=1.0, fac_ks=1.0, fac_n_o=1.
 
     return out_folder + '/' + os.path.basename(responseJSON)  # ,      out_folder + '/' + os.path.basename(hydrograph_txt_file)
 
-def download_geospatial_and_forcing_files(inputs_dictionary, download_request=['terrain'], out_folder=''):
+def download_geospatial_and_forcing_files(inputs_dictionary,OAuthHS, download_request=['terrain'], out_folder=''):
     download_choices = ",".join(download_request)
     out_folder = generate_uuid_file_path()
     inputs_dictionary_json_file = os.path.join( out_folder , 'inputs.txt')
@@ -1541,7 +1538,9 @@ def download_geospatial_and_forcing_files(inputs_dictionary, download_request=['
 
     json_hydrods_link = HDS.upload_file(inputs_dictionary_json_file)
 
-    download_request = HDS.downloadgeospatialandforcingfiles(inputs_dictionary_json=json_hydrods_link, download_request=download_choices)
+    download_request = HDS.downloadgeospatialandforcingfiles(inputs_dictionary_json=json_hydrods_link,
+                                                             download_request=download_choices,
+                                                             OAuthHS=OAuthHS)
 
     print 'Functions for donwloaing files completed = ', download_request
 
@@ -1726,7 +1725,7 @@ def download_geospatial_and_forcing_files2(inputs_dictionary, download_request='
 
     return   prepared_file
 
-def run_topnet(inputs_dictionary):
+def run_topnet(inputs_dictionary, OAuthHS):
     __author__ = 'shams', 'Prasanna'
 
     list_of_outfiles_dict = []
@@ -2149,8 +2148,7 @@ def run_topnet(inputs_dictionary):
     # push to HydroShare
     hs_res_id_created = push_topnet_to_hydroshare(simulation_name=inputs_dictionary['simulation_name'],
                               data_folder=out_folder,
-                              hs_usr_name=None, hs_password=None,
-                              hs_client_id=None, hs_client_secret=None, token=None)
+                                OAuthHS=OAuthHS)
 
     # delete the folder
     shutil.rmtree(working_folder)
@@ -2163,7 +2161,7 @@ def run_topnet(inputs_dictionary):
 
     return output_dict # { 'output_files_url':output_files_url_list  }
 
-def call_runpytopkapi(inputs_dictionary, out_folder=''):
+def call_runpytopkapi(inputs_dictionary,OAuthHS, out_folder=''):
     """
     :param inputs_dictionary:  Dictionary. Inputs from Tethys, or user requesting the service
     :return: Timeseries file- hydrograph, or list of input files if the user only wants input files
@@ -2330,41 +2328,8 @@ def call_runpytopkapi(inputs_dictionary, out_folder=''):
         rain_et['output_et_reference_fname'] = watershed_files['output_raster'] #:TODO, need to think what to do for ET if UEB
     print 'rain_et =', rain_et
 
-    #
-    # run_model_call = HDS.runpytopkapi6(user_name=inputs_dictionary['user_name'],
-    #                                    simulation_name=valid_simulation_name, #inputs_dictionary['simulation_name'],
-    #                                    simulation_start_date=inputs_dictionary['simulation_start_date'],
-    #                                    simulation_end_date=inputs_dictionary['simulation_end_date'],
-    #                                    USGS_gage=inputs_dictionary['USGS_gage'],
-    #                                    threshold=inputs_dictionary['threshold'],
-    #
-    #                                    # channel_manning_fname=watershed_files['output_mannings_n_stream_raster'],
-    #                                    overland_manning_fname=reclassify_nlcd['output_raster'],
-    #
-    #                                    hillslope_fname=watershed_files['output_slope_raster'],
-    #                                    # slope_raster['output_raster'], because sd8 is tan of angle, whereas slope is in degree
-    #                                    dem_fname=watershed_files['output_fill_raster'],
-    #                                    channel_network_fname=watershed_files['output_stream_raster'],
-    #                                    mask_fname=watershed_files['output_raster'],
-    #                                    flowdir_fname=watershed_files['output_flow_direction_raster'],
-    #
-    #                                    pore_size_dist_fname=soil_files['output_pore_size_distribution_file'],
-    #                                    bubbling_pressure_fname=soil_files['output_bubbling_pressure_file'],
-    #                                    resid_moisture_content_fname=soil_files['output_residual_soil_moisture_file'],
-    #                                    sat_moisture_content_fname=soil_files['output_saturated_soil_moisture_file'],
-    #                                    conductivity_fname= soil_files['output_ksat_LUT_file'], #soil_files['output_ksat_ssurgo_wtd_file'],  # only change is here, based on downloadsoildataforpytopkapi3 or 4
-    #                                    # soil_files['output_ksat_rawls_file'],
-    #                                    soil_depth_fname=  watershed_files['output_raster'],                                          # soil_files['output_sd_file'],
-    #
-    #                                    timestep=inputs_dictionary['timestep'],
-    #                                    output_response_txt="pytopkpai_response.txt",
-    #                                    rain_fname= rain_et['output_rain_fname'],
-    #                                    et_fname= rain_et['output_et_reference_fname'],
-    #                                    timeseries_source = inputs_dictionary['timeseries_source']
-    #                                    )
 
-
-    run_model_call = HDS.runpytopkapi7(user_name=inputs_dictionary['user_name'],
+    run_model_call = HDS.runpytopkapi8(user_name=inputs_dictionary['user_name'],
                                        simulation_name=valid_simulation_name, #inputs_dictionary['simulation_name'],
                                        simulation_start_date=inputs_dictionary['simulation_start_date'],
                                        simulation_end_date=inputs_dictionary['simulation_end_date'],
@@ -2397,7 +2362,8 @@ def call_runpytopkapi(inputs_dictionary, out_folder=''):
                                        output_response_txt="pytopkpai_response.txt",
                                        rain_fname= rain_et['output_rain_fname'],
                                        et_fname= rain_et['output_et_reference_fname'],
-                                       timeseries_source = inputs_dictionary['timeseries_source']
+                                       timeseries_source = inputs_dictionary['timeseries_source'],
+                                       OAuthHS=OAuthHS
                                        )
 
     if out_folder == "":

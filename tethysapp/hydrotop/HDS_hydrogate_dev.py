@@ -2954,7 +2954,7 @@ class HydroDS(object):
         response = self._make_data_service_request(url=url, params=payload)
         return self._process_dataservice_response(response, save_as)
 
-    def runpytopkapi(self, user_name, simulation_name, simulation_start_date, simulation_end_date, USGS_gage,
+    def runpytopkapi8(self, user_name, simulation_name, simulation_start_date, simulation_end_date, USGS_gage,
                       timestep, threshold,
                       mask_fname, overland_manning_fname, hillslope_fname, dem_fname, channel_network_fname,
                       flowdir_fname,
@@ -2962,14 +2962,13 @@ class HydroDS(object):
                       sat_moisture_content_fname, conductivity_fname, soil_depth_fname,
                       rain_fname, et_fname,
                       init_soil_percentsat, init_overland_vol, init_channel_flow,
-                     hs_usr_name='topkapi_app', hs_password='topkapi12!@',
-                     hs_client_id=None, hs_client_secret=None, token=None,
+                      OAuthHS,
                       timeseries_source='daymet', output_response_txt='pytopkpai_responseJSON.txt', save_as=None):
 
         if save_as:
             self._validate_file_save_as(save_as)
 
-        url = self._get_dataservice_specific_url('runpytopkapi')
+        url = self._get_dataservice_specific_url('runpytopkapi8')
         payload = {'user_name': user_name, 'simulation_name': simulation_name,
                    'simulation_start_date': simulation_start_date.replace('-', '/'),
                    'simulation_end_date': simulation_end_date.replace('-', '/'),
@@ -2995,11 +2994,10 @@ class HydroDS(object):
         payload['timeseries_source'] = timeseries_source
 
 
-        payload['hs_usr_name'] = hs_usr_name
-        payload['hs_password'] = hs_password
-        payload['hs_client_id'] = hs_client_id
-        payload['hs_client_secret'] = hs_client_secret
-        payload['token'] = token
+        payload['hs_username'] = OAuthHS['user_name']
+        payload['hs_client_id'] = OAuthHS['client_id']
+        payload['hs_client_secret'] =  OAuthHS['client_secret']
+        payload['token'] =  json.dumps(OAuthHS['token'])
 
 
         self._is_file_name_valid(output_response_txt, ext='.txt')
@@ -3012,13 +3010,13 @@ class HydroDS(object):
 
     def modifypytopkapi(self,  fac_l, fac_ks, fac_n_o, fac_n_c,fac_th_s,
                 pvs_t0 ,vo_t0 ,qc_t0 ,kc,
-                hs_res_id, output_hs_rs_id_txt='pytopkpai_model_files_metadata.txt', output_q_sim_txt= 'output_q_sim.txt',
+                hs_res_id, OAuthHS, output_hs_rs_id_txt='pytopkpai_model_files_metadata.txt', output_q_sim_txt= 'output_q_sim.txt',
                 save_as=None):
 
         if save_as:
             self._validate_file_save_as(save_as)
 
-        url = self._get_dataservice_specific_url('modifypytopkapi')
+        url = self._get_dataservice_specific_url('modifypytopkapi2')
         payload = {
             'fac_l':fac_l, 'fac_ks':fac_ks, 'fac_n_o':fac_n_o, 'fac_n_c':fac_n_c, 'fac_th_s':fac_th_s,
             'pvs_t0':pvs_t0, 'vo_t0':vo_t0, 'qc_t0':qc_t0, 'kc':kc,
@@ -3031,11 +3029,15 @@ class HydroDS(object):
         payload['output_hs_rs_id_txt'] = output_hs_rs_id_txt
         payload['output_q_sim_txt'] = output_q_sim_txt
 
+        payload['hs_username'] = OAuthHS['user_name']
+        payload['hs_client_id'] = OAuthHS['client_id']
+        payload['hs_client_secret'] =  OAuthHS['client_secret']
+        payload['token'] =  json.dumps(OAuthHS['token'])
 
         response = self._make_data_service_request(url=url, params=payload)
         return self._process_dataservice_response(response, save_as)
 
-    def loadpytopkapi(self,
+    def loadpytopkapi(self, OAuthHS,
                       hs_res_id, output_hs_rs_id_txt='pytopkpai_model_files_metadata.txt',
                       output_q_sim_txt= 'output_q_sim_retreived.txt',
                         save_as=None):
@@ -3043,13 +3045,17 @@ class HydroDS(object):
         if save_as:
             self._validate_file_save_as(save_as)
 
-        url = self._get_dataservice_specific_url('loadpytopkapi')
+        url = self._get_dataservice_specific_url('loadpytopkapi2')
         payload = {
             'hs_res_id': hs_res_id,
             'output_hs_rs_id_txt':output_hs_rs_id_txt,
             'output_q_sim_txt' : output_q_sim_txt
                    }
-
+        payload['hs_username'] = OAuthHS['user_name']
+        payload['hs_client_id'] = OAuthHS['client_id']
+        payload['hs_client_secret'] =  OAuthHS['client_secret']
+        payload['token'] =  json.dumps(OAuthHS['token'])
+        
         self._is_file_name_valid(output_hs_rs_id_txt, ext='.txt')
 
         response = self._make_data_service_request(url=url, params=payload)
@@ -3438,17 +3444,23 @@ class HydroDS(object):
         return self._process_dataservice_response(response, save_as)
 
 
-    def downloadgeospatialandforcingfiles(self, inputs_dictionary_json,download_request='geospatial',
+    def downloadgeospatialandforcingfiles(self, inputs_dictionary_json,OAuthHS, download_request='geospatial',
                                           output_zipfile='output.zip',output_response_txt='metadata.txt', save_as=None):
         if save_as:
             self._validate_file_save_as(save_as)
 
-        url = self._get_dataservice_specific_url('downloadgeospatialandforcingfiles')
+        url = self._get_dataservice_specific_url('downloadgeospatialandforcingfiles2')
         payload = {"inputs_dictionary_json": inputs_dictionary_json,
                    'download_request': download_request,
                    'output_zipfile':output_zipfile,
                    'output_response_txt': output_response_txt
                    }
+
+        payload['hs_username'] = OAuthHS['user_name']
+        payload['hs_client_id'] = OAuthHS['client_id']
+        payload['hs_client_secret'] =  OAuthHS['client_secret']
+        payload['token'] =  json.dumps(OAuthHS['token'])
+        
         response = self._make_data_service_request(url=url, params=payload)
         return self._process_dataservice_response(response, save_as)
 

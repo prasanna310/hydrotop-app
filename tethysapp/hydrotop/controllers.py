@@ -248,6 +248,8 @@ def model_run(request):
 
     """
     user_name = request.user.username
+    OAuthHS = get_OAuthHS(request)
+
     # model_input_load_request = hs_resource_id_loaded = request.GET.get('res_id', None)
 
     # Defaults
@@ -378,7 +380,9 @@ def model_run(request):
                           u'output_zipfile': u'http://129.123.9.159:20199/files/data/user_6/eg-output.zip',
                           u'output_json_string': {'hs_res_id_created': 'egresid123456'} }
 
-            json_data = app_utils.download_geospatial_and_forcing_files(inputs_dictionary, download_request=download_choice)
+            json_data = app_utils.download_geospatial_and_forcing_files(inputs_dictionary,
+                                                                        download_request=download_choice,
+                                                                        OAuthHS=OAuthHS)
 
             print "Downloading all the files successfully completed"
 
@@ -404,7 +408,7 @@ def model_run(request):
                           u'download_link': u'http://129.123.9.159:20199/files/data/user_6/eg-output.zip',
                           u'hs_res_id_created': '4b2e130625464232bd3a58c886eb8fc6' }
 
-            json_data = app_utils.run_topnet(inputs_dictionary)
+            json_data = app_utils.run_topnet(inputs_dictionary, OAuthHS)
 
 
             print "Preparing TOPNET input-files completed successfully. The response dict json_data = ",json_data
@@ -434,7 +438,7 @@ def model_run(request):
 
             # # Method (1), STEP (2):call_runpytopkapi function
             response_JSON_file = '/home/prasanna/tethysdev/tethysapp-hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/d1785b759e454ab3a67e3999dc74d813/pytopkpai_responseJSON.txt'
-            response_JSON_file = app_utils.call_runpytopkapi(inputs_dictionary=inputs_dictionary)
+            response_JSON_file = app_utils.call_runpytopkapi(inputs_dictionary=inputs_dictionary, OAuthHS=OAuthHS)
 
             json_data = app_utils.read_data_from_json(response_JSON_file)
 
@@ -568,7 +572,7 @@ def model_run(request):
 
         ######### START: need to get two variables: i) hs_resource_id_created, and ii) hydrograph series ##############
         response_JSON_file = '/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/1b6ba76c8b5641fbb5c436b7de8a521d/pytopkpai_responseJSON.txt'
-        response_JSON_file = app_utils.loadpytopkapi(hs_res_id=hs_resource_id, out_folder='')
+        response_JSON_file = app_utils.loadpytopkapi(hs_res_id=hs_resource_id,  OAuthHS=OAuthHS, out_folder='')
         json_data = app_utils.read_data_from_json(response_JSON_file)
 
         hs_resource_id_created = hs_resource_id_loaded = hs_resource_id  # json_data['hs_res_id_created']
@@ -712,7 +716,7 @@ def model_run(request):
 
         ######### START: need to get at leaset two variables: i) hs_resource_id_created, and ii) hydrograph series #####
         response_JSON_file = '/home/prasanna/tethysdev/hydrotop/tethysapp/hydrotop/workspaces/user_workspaces/1b6ba76c8b5641fbb5c436b7de8a521d/pytopkpai_responseJSON.txt'
-        response_JSON_file = app_utils.modifypytopkapi(hs_res_id=hs_resource_id_created, out_folder='',
+        response_JSON_file = app_utils.modifypytopkapi(hs_res_id=hs_resource_id_created, OAuthHS=OAuthHS, out_folder='',
                                                        fac_l=fac_L_form, fac_ks=fac_Ks_form, fac_n_o=fac_n_o_form,
                                                        fac_n_c=fac_n_c_form, fac_th_s=fac_th_s_form,
                                                        pvs_t0=pvs_t0_form, vo_t0=vo_t0_form, qc_t0=qc_t0_form,
@@ -1064,8 +1068,11 @@ def test2(request):
         client_secret = OAuthHS.get('client_secret'); test_string = client_secret
         token = OAuthHS.get('token'); test_string = token
 
-        test_string = 'user_name: %s , client_id: %s , client_secret: %s , token: %s ' % (
-        user_name, client_id, client_secret, token)
+        test_string = '''
+        user_name: %s , 
+        client_id: %s , 
+        client_secret: %s , 
+        token: %s ''' % ( user_name, client_id, client_secret, json.dumps(token))
     except:
         print 'HydroShare login could not be authenticated'
 
