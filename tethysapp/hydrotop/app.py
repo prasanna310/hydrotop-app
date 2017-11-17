@@ -9,7 +9,7 @@ class Hydrotop(TethysAppBase):
 
     name = 'HydroTop'
     index = 'hydrotop:home'
-    icon = 'hydrotop/images/icon5.png'
+    icon = 'hydrotop/images/icon11.png'
     package = 'hydrotop'
     root_url = 'hydrotop'
     color = 'blue'
