@@ -6,6 +6,9 @@
 
 {% block app_navigation %}
 
+<div id="sim_list">{% gizmo select_input simulation_names_list %} </div>
+
+<!--<div id="calib_list">{% gizmo select_input calibration_list %} </div>-->
 
 {%endblock%}
 
@@ -28,7 +31,9 @@
 
 
     <p > Test string:  {{test_string1}}</p>
-    <p > Test string2:  : {{test_string2}}</p>
+    <p > Test string2:  : </p>
+
+    <p id="id_1" style="font-size:80%"> Id_1  </p>
 {%endblock%}
 
 
@@ -37,12 +42,16 @@
 {% endblock %}
 
 
-{% block scripts %}
-  {{ block.super }}
-{% endblock %}
 
 
 {% block content_dependent_styles %}
   {{ block.super }}
   <link href="{% static 'hydrotop/css/model_input.css' %}" rel="stylesheet"/>
 {% endblock %}
+
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'hydrotop/js/tables.js' %} " type="text/javascript"></script>
+{% endblock %}
+
