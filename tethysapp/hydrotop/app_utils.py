@@ -79,6 +79,7 @@ def create_model_input_dict_from_request(request,user_name ):
                          "cell_size": float(request.POST['cell_size']),
                          "timestep": int(request.POST['timestep']),
                          "model_engine": request.POST['model_engine'],
+                         "epsgCode": int(request.POST['epsgCode']),
 
                          #init_channel_flow, init_overland_vol, init_soil_percentsat
                          "init_soil_percentsat": float(request.POST['init_soil_percentsat']),
@@ -1456,6 +1457,9 @@ def create_tethysTableView_calibrationRecord( hs_resource_id):
     from tethys_sdk.gizmos import TableView
     from .model import  SessionMaker, model_calibration_table, model_inputs_table
     session = SessionMaker()  # Make session
+
+    if hs_resource_id == None:
+        return  TableView()
 
     # for the given hs id, find input_table_id
     input_table_id = get_model_input_id_for_hs_res_id(hs_resource_id)

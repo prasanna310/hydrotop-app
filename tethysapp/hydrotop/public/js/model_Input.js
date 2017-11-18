@@ -512,6 +512,7 @@ function ShowHideAdditionalInputs() {
         document.getElementById("topnet_input").style.display = "block";
         document.getElementById("download_input").style.display = "none";
         document.getElementById("topkapi_initials").style.display = "none";
+        document.getElementById("epsgcode_block").style.display = "none";
     }
 
     if (model_engine=='download') {
@@ -519,6 +520,7 @@ function ShowHideAdditionalInputs() {
         document.getElementById("download_input").style.display = "block";
         document.getElementById("topnet_input").style.display = "none";
         document.getElementById("topkapi_initials").style.display = "none";
+        document.getElementById("epsgcode_block").style.display = "block";
     }
 
     if (model_engine=='TOPKAPI') {
@@ -526,6 +528,7 @@ function ShowHideAdditionalInputs() {
         document.getElementById("download_input").style.display = "none";
         document.getElementById("topnet_input").style.display = "none";
         document.getElementById("topkapi_initials").style.display = "block";
+        document.getElementById("epsgcode_block").style.display = "none";
     }
 
 }

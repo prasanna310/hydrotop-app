@@ -208,10 +208,15 @@
                           <label for="download_soil">download soil files</label> <br>
 
                           <input type="checkbox" id="download_forcing" name="download_choice2[]" value="forcing">
-                          <label for="download_forcing">download forcing files</label> <br>
+                          <label for="download_forcing">download forcing files</label> <br> <br>
+                          <!--{% gizmo text_input epsgCode %}-->
+
 
                     </div>
 
+                    <div id="epsgcode_block" style="display: none">
+                        {% gizmo text_input epsgCode %}
+                    </div>
 
                 </div>
             </div>

@@ -118,6 +118,8 @@ def model_input(request):
     pk_max_threshold = TextInput(display_text='pk_max_threshold', name='pk_max_threshold', initial=50000)
     pk_num_thershold = TextInput(display_text='pk_num_thershold', name='pk_num_thershold', initial=12)
 
+    epsgCode = TextInput(display_text='EPSG projection for outputs', name='epsgCode', initial=102003)
+
     timeseries_source = SelectInput(display_text='Forcing source',
                                     name='timeseries_source',
                                     multiple=False,
@@ -218,6 +220,8 @@ def model_input(request):
         'init_overland_vol': init_overland_vol,
         'init_channel_flow': init_channel_flow,
 
+        'epsgCode':epsgCode,
+
         'threshold_topnet': threshold_topnet,
         'pk_min_threshold': pk_min_threshold,
         'pk_max_threshold': pk_max_threshold,
@@ -253,6 +257,7 @@ def model_run(request):
     OAuthHS = get_OAuthHS(request)
     user_name = OAuthHS['user_name']
 
+    # INITIAL VARIABLES
     # model_input_load_request = hs_resource_id_loaded = request.GET.get('res_id', None)
 
     # Defaults
@@ -330,7 +335,6 @@ def model_run(request):
         model_input_prepare_request = request.POST['simulation_name']
         print "MSG from I: Preparing model simulation, simulation name is: ", model_input_prepare_request
     except:
-
         model_input_prepare_request = None
 
     # # check to see if the request is from method (2)
@@ -362,6 +366,11 @@ def model_run(request):
         print 'MSG: Calibration parameters are modified'
     except:
         model_run_calib_request = None
+
+
+
+
+
 
     # Method (1), request from model_input-prepare model
     if model_input_prepare_request != None:
@@ -1052,6 +1061,10 @@ def test2(request):
     OAuthHS = get_OAuthHS(request)
 
     user_name = OAuthHS['user_name']
+    hs_res_id_for_table = None
+
+    simulation_names_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
+    calibration_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
 
     test_string = 'None'
 
@@ -1083,6 +1096,10 @@ def test2(request):
     context = {
         'test_string1': test_string,
         'test_string2': test_string2,
+
+        'simulation_names_list':simulation_names_list,
+        'calibration_list':calibration_list,
+        'hs_res_id_for_table':hs_res_id_for_table,
 
         'table_model_input': table_model_input,
         'table_model_calibration': table_model_calibration,
