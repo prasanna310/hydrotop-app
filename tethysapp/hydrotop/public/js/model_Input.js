@@ -58,8 +58,13 @@ $(document).ready(function() {
 
 
 });
+var popupDiv = $('#welcome-popup');
 
 function initMap() {
+
+    //show help popup
+    popupDiv.modal('show');
+
     var mapDiv = document.getElementById('map');
     map = new google.maps.Map(mapDiv, {
         center: {
@@ -141,8 +146,6 @@ function initMap() {
     drawMarkerOnTextChange();
     ShowHideAdditionalInputs();
     // area_domain();
-
-
 
 
     // block for places search //

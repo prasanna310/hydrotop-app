@@ -9,6 +9,32 @@
   <img src="{% static tethys_app.icon %}">
 {% endblock %}
 
+
+{% block app_title_override %}
+  <div id='nav'>
+    <p>{{ tethys_app.name }}</p>
+    <ul >
+        <li><button type="button" class="btn btn-default" data-toggle="modal" data-target="#welcome-popup"> <img src="{% static 'hydrotop/images/icon_help2.png'%}" > </button> </li>
+
+        <li><a href="{% url 'hydrotop:model_input' %}"> <img src="{% static 'hydrotop/images/icon_pdf3.png'%}" > </a></li>
+        <li><a href="https://github.com/prasanna310/hydrotop-app"> <img src="{% static 'hydrotop/images/icon_git.png'%}" >  </a></li>
+        <li><a href="{% url 'hydrotop:model_input' %}"><img src="{% static 'hydrotop/images/icon_youtube.png'%}" > </a></li>
+        <li><a href="{% url 'hydrotop:model_run' %}"> <img src="{% static 'hydrotop/images/icon_thesis2.png'%}" >  </a></li>
+        <li><a href="/apps"> <img src="{% static 'hydrotop/images/icon_exit3.png'%}" >  </a></li>
+
+
+
+      <!--<li><a href="/apps">Exit</a></li>-->
+    </ul>
+    <!--<a id='exit'href="/apps" ><button type="button" style="f font-size:15px; hight:30px; width:80px; margin-left:500xp; margin-top:20px">Exit App</button></a>-->
+  </div>
+
+
+{% endblock %}
+
+
+
+
 {# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
 {% block app_title %}{{ tethys_app.name }}{% endblock %}
 
@@ -30,6 +56,66 @@
 
 {% block app_actions %}
 {% endblock %}
+
+
+
+
+
+
+{% block app_content_wrapper_override %}
+<!-- Modal  -->
+<div class="modal fade" id="welcome-popup" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Welcome to HydroTOP app !</h4>
+            </div>
+            <div class="modal-body">
+                <div id="welcome-info">
+                    <ol>
+                        <h6>1. Select Simulation name and time period</h6>
+                        <p>Choose the date</p>
+                        <h6>2. Select model domain and the point of interest</h6>
+                        <p>Click the map or enter coordinates to select the point of interest.</p>
+                        <h6>3. Enter additional parameters</h6>
+                        <p>Click the Get Snow button to show a time-series graph.</p>
+                        <h6>4. Send Query </h6>
+                        <p>
+                            OR,
+                        </p>
+                        <h6>5. Load previously prepared model</h6>
+                        <p> Send Query and wait for the results </p>
+
+                        <h9><br>
+We acknowledge the use of ....
+                        </h9>
+                        <br><br>
+                        <div id="extra-buttons">
+                            <a class="btn btn-default" href="http://github.com/prasanna310/hydrotop-app" target="_blank">More Info</a>
+                        </div>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="byu-logo-container">
+                    <span><i>Developed at the USU </i></span>
+                    <img src="{% static 'hydrotop/images/icon_usu.png' %}" style="height:50px"/>
+                </div>
+                <button type="button" class="btn btn-default" id="close-popup" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Modal -->
+
+{{block.super}}
+{% endblock %}
+
+
+
+
+
 
 {% block content_dependent_styles %}
   {{ block.super }}
