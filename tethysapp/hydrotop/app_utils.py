@@ -580,8 +580,61 @@ def create_simulation_list_after_querying_db(given_user_name=None, return_hs_res
     queries = []
 
     try:
-        # Query DB, filter 1) username 2) model used=TOPKAPI 
+        # Query DB, filter 1) username 2) model used=TOPKAPI
         simulations_queried = session.query(model_inputs_table).filter(and_(model_inputs_table.user_name == given_user_name),model_inputs_table.model_engine == 'TOPKAPI'  ).all()  # searches just the id input in URL
+
+
+        for record in simulations_queried:
+            simulation_names_list_queried.append(record.simulation_name)
+            simulation_names_id.append(record.id)
+            hs_resourceID.append(record.hs_resource_id)
+
+
+        if return_model_input_id :
+            queries = zip(simulation_names_list_queried,simulation_names_id ) # returns model_input_table_id
+        if return_hs_resource_id :
+            queries = zip(simulation_names_list_queried, hs_resourceID)  # returns hs_resource of model instance
+
+        if len(queries)<= 1:
+            print 'Error in reading database, length only 1'
+            stop
+        print 'Success: Querying the db to create a list of existing simulation'
+
+    except Exception,e:
+        queries = [( 'No saved model', '44248166e239490383f23f6568de5fcf')]
+        print '**************Warning: Could not query the db to create a list of existing simulation. Error = >',e
+
+    simulation_names_list = SelectInput(display_text='Saved Models',
+                                     name='simulation_names_list',
+                                     multiple=False,
+                                     options= queries  )#[ (  simulations_queried[0].id, '1'),  (  simulations_queried[1].simulation_name, '2'  ),  (   simulations_queried[1].user_name, '2'  )]
+
+    return simulation_names_list
+
+def create_model_input_list_after_querying_db(given_user_name=None, return_hs_resource_id=True, return_model_input_id = False):
+    # returns a tethys gizmo or a drop down list, which should be referenced in html with name = 'simulation_names_list'
+    # if return_hs_resource_id == True,
+    from .model import engine, SessionMaker, Base, model_inputs_table ,model_calibration_table, model_result_table
+    from tethys_sdk.gizmos import SelectInput
+
+    Base.metadata.create_all(engine)    # Create tables
+    session = SessionMaker()            # Make session
+
+    #  # Query DB
+    # simulations_queried = session.query(model_inputs_table).filter(model_inputs_table.user_name==given_user_name).all() # searches just the id input in URL
+
+    # print 'Total no of records in model input table is', session.query(model_inputs_table).count()
+    # print 'Total no of records in model calibration table is', session.query(model_calibration_table).count()
+    # print 'Total no of records in model result table is', session.query(model_result_table).count()
+
+    simulation_names_list_queried = []
+    simulation_names_id = []
+    hs_resourceID = []
+    queries = []
+
+    try:
+        # Query DB, filter 1) username 2) model used=TOPKAPI
+        simulations_queried = session.query(model_inputs_table).filter(model_inputs_table.user_name == given_user_name ).all()  # searches just the id input in URL
 
 
         for record in simulations_queried:

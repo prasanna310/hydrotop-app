@@ -1063,7 +1063,7 @@ def test2(request):
     user_name = OAuthHS['user_name']
     hs_res_id_for_table = None
 
-    simulation_names_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
+    simulation_names_list = app_utils.create_model_input_list_after_querying_db(given_user_name=user_name)
     calibration_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
 
     test_string = 'None'
