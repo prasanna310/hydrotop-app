@@ -562,6 +562,7 @@ def create_simulation_list_after_querying_db(given_user_name=None, return_hs_res
     # if return_hs_resource_id == True,
     from .model import engine, SessionMaker, Base, model_inputs_table ,model_calibration_table, model_result_table
     from tethys_sdk.gizmos import SelectInput
+    from sqlalchemy import and_
 
     Base.metadata.create_all(engine)    # Create tables
     session = SessionMaker()            # Make session
@@ -579,9 +580,8 @@ def create_simulation_list_after_querying_db(given_user_name=None, return_hs_res
     queries = []
 
     try:
-        # Query DB
-        simulations_queried = session.query(model_inputs_table).filter(
-            model_inputs_table.user_name == given_user_name).all()  # searches just the id input in URL
+        # Query DB, filter 1) username 2) model used=TOPKAPI 
+        simulations_queried = session.query(model_inputs_table).filter(and_(model_inputs_table.user_name == given_user_name),model_inputs_table.model_engine == 'TOPKAPI'  ).all()  # searches just the id input in URL
 
 
         for record in simulations_queried:
