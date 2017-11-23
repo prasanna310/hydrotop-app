@@ -43,9 +43,9 @@ class Hydrotop(TethysAppBase):
                            controller='hydrotop.controllers.visualize_shp'),
 
                     # /hydrotop/test2
-                    UrlMap(name='test2',
-                           url='hydrotop/test2',
-                           controller='hydrotop.controllers.test2'),
+                    UrlMap(name='tables',
+                           url='hydrotop/tables',
+                           controller='hydrotop.controllers.tables'),
 
                     UrlMap(name='model_input0',
                            url='hydrotop/model_input0',

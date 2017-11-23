@@ -1056,46 +1056,58 @@ def google_map_input(request):
     return render(request, 'hydrotop/googlemap.html', context)
 
 
-def test2(request):
-    user_name1 = request.user.username
-    OAuthHS = get_OAuthHS(request)
-
-    user_name = OAuthHS['user_name']
-    hs_res_id_for_table = None
-
-    simulation_names_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
-    calibration_list = app_utils.create_simulation_list_after_querying_db(given_user_name=user_name)
-
-    test_string = 'None'
-
-    table_model_input= app_utils.create_tethysTableView_simulationRecord(user_name)
-    table_model_calibration = app_utils.create_tethysTableView_calibrationRecord(hs_resource_id='9dfc6395a5cd4a359af4ed19063982f9') #dec1e833e39a45bb945d4ac8c231249e
-
-    table_model_input_ALL = app_utils.create_tethysTableView_EntireRecord(table_name='model_input')
-    table_model_calibration_ALL = app_utils.create_tethysTableView_EntireRecord(table_name='calibration')
-
-    # table_model_result_ALL  = app_utils.create_tethysTableView_EntireRecord(table_name='result') # this will slow down the computer
+def tables(request):
 
     try:
-        # hs = OAuthHS['hs']
-        user_name = OAuthHS.get('user_name'); test_string = user_name
-        client_id = OAuthHS.get('client_id'); test_string = client_id
-        client_secret = OAuthHS.get('client_secret'); test_string = client_secret
-        token = OAuthHS.get('token'); test_string = token
-
-        test_string = '''
-        user_name: %s ,
-        hs_username: %s 
-        ''' % (user_name1, user_name)
+        OAuthHS = get_OAuthHS(request)
+        user_name = OAuthHS['user_name']
     except:
-        print 'HydroShare login could not be authenticated'
+        user_name = request.user.username
 
-    test_string2 = getattr(settings, "SESSION_COOKIE_AGE", None)
+    test_string = None
+    hs_res_id_for_table = None
+    calib_id_queried = None
+    calibration_list = None
+
+
+    # DROPDOWN 1, TABLE1
+    simulation_names_list = app_utils.create_model_input_list(given_user_name=user_name)
+    table_model_input = app_utils.create_tethysTableView_simulationRecord(user_name)
+
+    # when request is sent
+    if request.is_ajax and request.method == 'POST':
+        hs_res_queried = request.POST['simulation_names_list']
+        print 'hs_res_queried', hs_res_queried
+
+        # TABLE2: calibration ----FOR----> selected hs_res
+        table_model_calibration = app_utils.create_tethysTableView_calibrationRecord(hs_resource_id=hs_res_queried)
+
+
+        # TABLE3: model result ----FOR----> selected hydroshare resource
+        table_model_result = app_utils.create_tethysTableView_timeseries_for_hs_res(hs_resource_id=hs_res_queried)
+
+        # # DROPDOWN 2
+        # create a drop down query of all the calibration ids for the selected model_input id.
+        # model_calib_ids_for_model_input_id = [item[0] for item in table_model_calibration.rows]
+        # calibration_list = app_utils.create_calibration_list( hs_resource_id=hs_res_queried)  # (calib_ids = model_calib_ids_for_model_input_id)
+
+    else:
+        hs_res_queried = None
+        table_model_calibration = None
+        table_model_result = None
+
+    # TABLES 4,5. **NOT DISPLAYED**
+    table_model_input_ALL = app_utils.create_tethysTableView_EntireRecord(table_name='model_input')
+    table_model_calibration_ALL = app_utils.create_tethysTableView_EntireRecord(table_name='calibration')
+    # table_model_result_ALL  = app_utils.create_tethysTableView_EntireRecord(table_name='result') # this will slow down the computer
+
 
 
     context = {
         'test_string1': test_string,
-        'test_string2': test_string2,
+
+        'hs_res_queried':hs_res_queried,
+        'calib_id_queried':calib_id_queried,
 
         'simulation_names_list':simulation_names_list,
         'calibration_list':calibration_list,
@@ -1103,11 +1115,13 @@ def test2(request):
 
         'table_model_input': table_model_input,
         'table_model_calibration': table_model_calibration,
+        'table_model_result':table_model_result,
+
         'table_model_input_ALL':table_model_input_ALL,
         'table_model_calibration_ALL':table_model_calibration_ALL,
         # 'table_model_result_ALL':table_model_result_ALL,
     }
-    return render(request, 'hydrotop/test2.html', context)
+    return render(request, 'hydrotop/tables.html', context)
 
 
 def model_input0(request):

@@ -611,6 +611,109 @@ def create_simulation_list_after_querying_db(given_user_name=None, return_hs_res
 
     return simulation_names_list
 
+def create_model_input_list(given_user_name=None, return_hs_resource_id=True, return_model_input_id = False):
+    # returns a tethys gizmo or a drop down list, which should be referenced in html with name = 'simulation_names_list'
+    # if return_hs_resource_id == True,
+    from .model import engine, SessionMaker, Base, model_inputs_table ,model_calibration_table, model_result_table
+    from tethys_sdk.gizmos import SelectInput
+
+
+    Base.metadata.create_all(engine)    # Create tables
+    session = SessionMaker()            # Make session
+
+    #  # Query DB
+    # simulations_queried = session.query(model_inputs_table).filter(model_inputs_table.user_name==given_user_name).all() # searches just the id input in URL
+
+    # print 'Total no of records in model input table is', session.query(model_inputs_table).count()
+    # print 'Total no of records in model calibration table is', session.query(model_calibration_table).count()
+    # print 'Total no of records in model result table is', session.query(model_result_table).count()
+
+    simulation_names_list_queried = []
+    simulation_names_id = []
+    hs_resourceID = []
+    queries = []
+
+    try:
+        # Query DB, filter 1) username 2) model used=TOPKAPI
+        simulations_queried = session.query(model_inputs_table).filter(model_inputs_table.user_name == given_user_name ).all()  # searches just the id input in URL
+
+
+        for record in simulations_queried:
+            simulation_names_list_queried.append(record.simulation_name)
+            simulation_names_id.append(record.id)
+            hs_resourceID.append(record.hs_resource_id)
+
+
+        if return_model_input_id :
+            queries = zip(simulation_names_list_queried,simulation_names_id ) # returns model_input_table_id
+        if return_hs_resource_id :
+            queries = zip(simulation_names_list_queried, hs_resourceID)  # returns hs_resource of model instance
+
+        if len(queries)<= 1:
+            print 'Error in reading database, length only 1'
+            stop
+        print 'Success: Querying the db to create a list of existing simulation'
+
+    except Exception,e:
+        queries = [( 'No saved model', '44248166e239490383f23f6568de5fcf')]
+        print '**************Warning: Could not query the db to create a list of existing simulation. Error = >',e
+
+    simulation_names_list = SelectInput(display_text='Saved Models',
+                                     name='simulation_names_list',
+                                     multiple=False,
+                                     options= queries  )#[ (  simulations_queried[0].id, '1'),  (  simulations_queried[1].simulation_name, '2'  ),  (   simulations_queried[1].user_name, '2'  )]
+    print 'table queries', queries
+    return simulation_names_list
+
+def create_model_calib_list(given_user_name=None, return_hs_resource_id=True, return_model_input_id = False):
+    # returns a tethys gizmo or a drop down list, which should be referenced in html with name = 'simulation_names_list'
+    # if return_hs_resource_id == True,
+    from .model import engine, SessionMaker, Base, model_inputs_table ,model_calibration_table, model_result_table
+    from tethys_sdk.gizmos import SelectInput
+
+
+    Base.metadata.create_all(engine)    # Create tables
+    session = SessionMaker()            # Make session
+
+    #  # Query DB
+
+    simulation_names_list_queried = []
+    simulation_names_id = []
+    hs_resourceID = []
+    queries = []
+
+    try:
+        # Query DB, filter 1) username 2) model used=TOPKAPI
+        simulations_queried = session.query(model_inputs_table).filter(model_inputs_table.user_name == given_user_name ).all()  # searches just the id input in URL
+
+
+        for record in simulations_queried:
+            simulation_names_list_queried.append(record.simulation_name)
+            simulation_names_id.append(record.id)
+            hs_resourceID.append(record.hs_resource_id)
+
+
+        if return_model_input_id :
+            queries = zip(simulation_names_list_queried,simulation_names_id ) # returns model_input_table_id
+        if return_hs_resource_id :
+            queries = zip(simulation_names_list_queried, hs_resourceID)  # returns hs_resource of model instance
+
+        if len(queries)<= 1:
+            print 'Error in reading database, length only 1'
+            stop
+        print 'Success: Querying the db to create a list of existing simulation'
+
+    except Exception,e:
+        queries = [( 'No saved model', '44248166e239490383f23f6568de5fcf')]
+        print '**************Warning: Could not query the db to create a list of existing simulation. Error = >',e
+
+    simulation_names_list = SelectInput(display_text='Saved Models',
+                                     name='simulation_names_list',
+                                     multiple=False,
+                                     options= queries  )#[ (  simulations_queried[0].id, '1'),  (  simulations_queried[1].simulation_name, '2'  ),  (   simulations_queried[1].user_name, '2'  )]
+
+    return simulation_names_list
+
 
 def get_box_from_tif_or_shp(fname):
 
@@ -1144,7 +1247,8 @@ def write_to_model_result_table(model_calibration_table_id, timeseries_discharge
         if len(timeseries_discharge_list[0]) == 2:  # i.e. no observed flow
             q_obs = 0
 
-        one_run = model_result_table(date_time=one_tuple[0], simulated_discharge=one_tuple[1], observed_discharge=q_obs,
+        one_run = model_result_table(date_time= datetime.datetime.strptime(one_tuple[0], "%m-%d-%Y") ,
+                                     simulated_discharge=one_tuple[1], observed_discharge=q_obs,
                                      model_calibration_id=model_calibration_table_id)
         session.add(one_run)
 
@@ -1377,10 +1481,10 @@ def create_tethysTableView_EntireRecord( table_name='model_input'):
 
         rows = []
         for row in qry:
-            row_tuple = (row.numeric_parameters, row.calibration_parameters)
+            row_tuple = (row.input_table_id, row.numeric_parameters, row.calibration_parameters)
             rows.append(row_tuple)
 
-        cols = ('Numeric parameters', 'calibration parameters')
+        cols = ('input_table_id', 'Numeric parameters', 'calibration parameters')
 
         table_query = TableView(column_names=cols,
                                 rows=rows,
@@ -1459,10 +1563,16 @@ def create_tethysTableView_calibrationRecord( hs_resource_id):
     session = SessionMaker()  # Make session
 
     if hs_resource_id == None:
-        return  TableView()
+        return  TableView(column_names=(),
+                            rows=(),
+                            hover=True,
+                            striped=True,
+                            bordered=False,
+                            condensed=True)
 
     # for the given hs id, find input_table_id
     input_table_id = get_model_input_id_for_hs_res_id(hs_resource_id)
+    print 'hs loaded: %s, model_input: %s'%(hs_resource_id,input_table_id )
 
     # step-2: for that table id, display calibration table
     qry = session.query(model_calibration_table).filter( model_calibration_table.input_table_id == input_table_id).all()  # because PK is the same as no of rows, i.e. length
@@ -1471,15 +1581,15 @@ def create_tethysTableView_calibrationRecord( hs_resource_id):
     # pvs_t0_init, vo_t0_init, qc_t0_init, kc_init
     # fac_L_init, fac_Ks_init, fac_n_o_init, fac_n_c_init, fac_th_s_init
     cols = ( 'calib_id', 'input_table_id',
-             'Soil cell: Initial saturation %', 'Overland cell: initial volume', 'Channel cell: initial flow' ,
-             'X-Factor: Soil depth','X-Factor: ksat','X-Factor: n overland','X-Factor: n channel','X-Factor: soil sat')
+             'Soil: Init saturation %', 'Overland: init volume', 'Channel: init flow' ,
+             'Soil-depth coeff.','ksat coeff.','n overland coeff.','n channel coeff.','soil sat coeff.')
     for row in qry:
         numeric_parameters = row.numeric_parameters.split("__")
         calibration_parameters = row.calibration_parameters.split("__")
 
         row_tuple = (row.id, row.input_table_id,
                      numeric_parameters[0] , numeric_parameters[1] , numeric_parameters[2] , numeric_parameters[3] ,
-                     calibration_parameters[0],calibration_parameters[1],calibration_parameters[2],calibration_parameters[3],calibration_parameters[4])
+                     calibration_parameters[0],calibration_parameters[1],calibration_parameters[2],calibration_parameters[3])
         rows.append(row_tuple)
 
 
@@ -1491,6 +1601,105 @@ def create_tethysTableView_calibrationRecord( hs_resource_id):
                             condensed=True)
     return table_query
 
+
+def create_tethysTableView_timeseriesRecord( calib_id):
+    from tethys_sdk.gizmos import TableView
+    from .model import  SessionMaker, model_result_table
+    session = SessionMaker()  # Make session
+
+    if calib_id == None:
+        return  TableView(column_names=(),
+                            rows=(),
+                            hover=True,
+                            striped=True,
+                            bordered=False,
+                            condensed=True)
+
+
+    # step-2: for that table id, display calibration table
+    qry = session.query(model_result_table).filter( model_result_table.input_table_id == calib_id).all()  # because PK is the same as no of rows, i.e. length
+
+
+    rows = []
+    # pvs_t0_init, vo_t0_init, qc_t0_init, kc_init
+    # fac_L_init, fac_Ks_init, fac_n_o_init, fac_n_c_init, fac_th_s_init
+    cols = ( 'date_time', 'simulated_discharge', 'observed_discharge')
+    for row in qry:
+        row_tuple = (row.date_time, row.simulated_discharge,row.observed_discharge )
+        rows.append(row_tuple)
+
+    table_query = TableView(column_names=cols,
+                            rows=rows,
+                            hover=True,
+                            striped=True,
+                            bordered=False,
+                            condensed=True)
+    return table_query
+
+def create_tethysTableView_timeseries_for_hs_res( hs_resource_id):
+    from tethys_sdk.gizmos import TableView
+    from .model import  SessionMaker, model_result_table, model_inputs_table
+    session = SessionMaker()  # Make session
+
+    qry = session.query(model_result_table).filter( model_inputs_table.hs_resource_id == hs_resource_id).all()  # because PK is the same as no of rows, i.e. length
+
+    rows = []
+    cols = ('model_calibration_id', 'datetime', 'simulated_discharge', 'observed_discharge')
+    for row in qry:
+        row_tuple = (row.model_calibration_id, row.datetime, row.simulated_discharge,row.observed_discharge )
+        rows.append(row_tuple)
+
+    table_query = TableView(column_names=cols, rows=rows,
+                            hover=True, striped=True, bordered=False, condensed=True)
+    return table_query
+
+
+
+def create_calibration_list(calib_ids=None , hs_resource_id = None):
+    from tethys_sdk.gizmos import SelectInput
+
+
+
+    # if hs res od
+    if calib_ids == None:
+        if hs_resource_id == None:
+            return TableView(column_names=(),
+                             rows=(),
+                             hover=True,
+                             striped=True,
+                             bordered=False,
+                             condensed=True)
+
+        # get model_input_id for hs_id
+        input_table_id = get_model_input_id_for_hs_res_id(hs_resource_id)
+
+        # get model_cal_ids for model_input_id
+        from .model import SessionMaker, model_calibration_table, model_inputs_table
+        session = SessionMaker()  # Make session
+
+
+        qry = session.query(model_calibration_table).filter( model_calibration_table.input_table_id == input_table_id).all()
+
+        rows = []
+        for row in qry:
+            row_tuple = (row.id, row.input_table_id)
+            rows.append(row_tuple)
+
+        calib_ids = [i[0] for i in rows]
+        queries = zip(calib_ids, calib_ids)
+        print 'calib_ids', calib_ids
+        print 'calib queries', queries
+    else:
+        queries = zip(calib_ids, calib_ids)
+        print 'calib queries', queries
+    calibration_list = SelectInput(display_text='Results',
+                                        name='calib_id_list',
+                                        multiple=False,
+                                        options=queries)  # [ (  simulations_queried[0].id, '1'),  (  simulations_queried[1].simulation_name, '2'  ),  (   simulations_queried[1].user_name, '2'  )]
+
+
+
+    return calibration_list
 
 
 def loadpytopkapi(hs_res_id, OAuthHS, out_folder=""):
