@@ -267,15 +267,52 @@
         <!--<h3 style="color:#0073e6">Input Data Preparation</h3>-->
         <p style="font-size:100%">
 
-            <span data-toggle="collapse" data-target="#intro-detail" style="color: green; margin-bottom: 20px"><strong><u>Click here for quick help</u></strong></span>
+            <span data-toggle="collapse" data-target="#intro-detail" style="color: green; margin-bottom: 20px"><strong><u>Quick help</u></strong></span>
         </p>
         <div id="intro-detail" class="collapse" style="background-color:#f2f2f2">
+
             <p style="font-size:100%">
-                This application helps prepare a complete model-instance for TOPKAPI model simulation, or model-input files for TOPNET or geospatial dataset for a user defined area (within the bounds of supporting data in the continental US).
-                <strong>TOPKAPI simulation:</strong> Prepare a TOPKAPI model <br>
-                <strong>TOPNET model input:</strong> Prepare input files for TOPNET <br>
-                <strong>Download geospatial dataset:</strong> Three options: i) geospatial ii) geospatial+soil dataset (for US only), and iii) geospatial + soil dataset + forcing files (for US only)<br>
-            </p>
+                This application might be used to prepare: <br>
+                <strong>TOPKAPI simulation:</strong> Prepare a TOPKAPI model-instance, and run the model <br>
+                <strong>TOPNET model-inputs:</strong> Prepare input files for TOPNET based on workflow by <a href="https://github.com/nazmussazib/TOPNET_PreProcessing" target="_blank"> Sazib </a>a> <br>
+                <strong>Geospatial data:</strong> Three options:
+
+
+<table style="width:20%">
+  <tr>
+    <th>1. </th>
+    <th>geospatial:</th>
+    <td>TauDEM assisted terrain analysis for Global</td>
+  </tr>
+  <tr>
+      <th>2. </th>
+    <th>geospatial+soil dataset:</th>
+    <td>for US only</td>
+  </tr>
+  <tr>
+      <th>3. </th>
+    <th>geospatial + soil dataset + forcing files:</th>
+    <td>for US only</td>
+  </tr>
+</table> <br>
+
+
+            <div id='nav'>
+                <ul >
+                    <li><button type="button" class="btn btn-default" data-toggle="modal" data-target="#welcome-popup"> <img src="{% static 'hydrotop/images/icon_help2.png'%}" > </button> </li>
+
+                    <li><a href="{% static 'hydrotop/files/tutorials.pdf' %}" target="_blank"> <img src="{% static 'hydrotop/images/icon_pdf3.png'%}" > </a></li>
+                    <li><a href="https://github.com/prasanna310/hydrotop-app" target="_blank"> <img src="{% static 'hydrotop/images/icon_git.png'%}" >  </a></li>
+                    <!--<li><a href="https://github.com/prasanna310/hydrotop-app"><img src="{% static 'hydrotop/images/icon_youtube.png'%}" > </a></li>-->
+                    <li><a href="{% static 'hydrotop/files/thesis.pdf' %}" target="_blank"> <img src="{% static 'hydrotop/images/icon_thesis2.png'%}" >  </a></li>
+                    <li><a href="{% url 'hydrotop:tables' %}" target="_blank"> <img src="{% static 'hydrotop/images/icon_table3.png'%}" >  </a></li>
+                    <li><a href="/apps"> <img src="{% static 'hydrotop/images/icon_exit3.png'%}" >  </a></li>
+
+                  <!--<li><a href="/apps">Exit</a></li>-->
+                </ul>
+              </div>
+
+
         </div>
 
     </div>
@@ -303,9 +340,6 @@
 {%endblock%}
 
 
-
-{% block app_actions_override %}
-{% endblock %}
 
 
 

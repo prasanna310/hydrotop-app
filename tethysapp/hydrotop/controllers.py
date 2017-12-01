@@ -1504,7 +1504,7 @@ def model_input1(request):
 # get hs object through oauth
 def get_OAuthHS(request):
     OAuthHS = {}
-
+    OAuthHS['user_name'] = request.user.username
 
     try:
         hs_hostname = "www.hydroshare.org"
