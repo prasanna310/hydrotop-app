@@ -569,6 +569,11 @@ function area_domain(){
             // $('#statusbar').addClass('alert-error');
         }
 
+        var x =  document.forms["inputs"]["cell_size"].value;
+        document.forms["inputs"]["init_overland_vol"].value = 0.0003* x*x ;
+        document.forms["inputs"]["init_channel_flow"].value = 0.001* x ;
+
+
         return bb_area;
 
 }
@@ -589,7 +594,7 @@ function mToDegree(distance_in_m, avg_lat){
 window.geojson_callback = function(results) {
 
 	 var map = new google.maps.Map(document.getElementById('map'), {
-	 zoom: 9,
+	 zoom: 12,
 	 center: {lat: 42, lng: -111.3},
 	 mapTypeId: 'terrain'
 	  });

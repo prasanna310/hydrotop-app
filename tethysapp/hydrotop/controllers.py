@@ -49,7 +49,7 @@ def model_input(request):
 
     # init_channel_flow, init_overland_vol, init_soil_percentsat
     # # intials
-    watershed_name = 'SantaCruz'  # 'RBC' , 'Santa Cruz', 'Barrow Creeks', 'Plunge' , Logan
+    watershed_name = 'Plunge'  # 'RBC' , 'Santa Cruz', 'Barrow Creeks', 'Plunge' , Logan
     initials = {
 
         'Logan': {'simulation_name': 'Logan_sample', 'USGS_gage': '10109000', 'cell_size': '30', 't0': '10-01-2010',
@@ -65,7 +65,7 @@ def model_input(request):
         'Plunge': {'simulation_name': 'Plunge_demo', 'USGS_gage': '11055500', 'cell_size': '100', 't0': '10-01-2010',
                    't': '10-01-2011', 'threshold': '5', 'del_t': '24', 'x': '-117.141284', 'y': '34.12128',
                    # 'ymax':'34.2336', 'xmax': '-117.048046', 'ymin': '34.10883', 'xmin': '-117.168289',
-                   'ymax': '34.213', 'xmax': '-117.062', 'ymin': '34.10883', 'xmin': '-117.18',
+                   'ymax': '34.23', 'xmax': '-117.1', 'ymin': '34.10883', 'xmin': '-117.2',
                    'init_soil_percentsat': '30'
                    },
 
