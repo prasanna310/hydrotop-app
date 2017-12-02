@@ -1,0 +1,77 @@
+{% extends "hydrotop/base.html" %}
+{% load staticfiles %}
+{% load tethys_gizmos %}
+
+
+
+{% block app_navigation %}
+
+
+<form id ="load_simulation"  method="post" action="{% url 'hydrotop:tables' %}" enctype="form-data">
+    {% csrf_token %}
+
+    <div id="sim_list">{% gizmo select_input simulation_names_list %} </div>
+
+    <input type="submit" name="table-load" class="btn btn-default" value="Load table" >
+
+  </form>
+
+
+
+<!--<div id="calib_list">{% gizmo select_input calibration_list %} </div>-->
+
+{%endblock%}
+
+
+
+
+{% block app_content%}
+    {% load tethys_gizmos %}
+
+    <!--<p > calib_id :  {{test_string1}}</p>-->
+    <!--<p >  Queried HS_RES  : {{hs_res_queried}} </p>-->
+    <!--<p >  Queried calib  : {{calib_id_queried}} </p>-->
+    <!--ID_1: <p id="id_1" style="font-size:80%"> HS-resource_JS  </p>-->
+
+
+    <h5> Information on Previous Actions </h5> <hr>
+    {% gizmo table_view table_model_input %}<br><br>
+
+
+    {% if hs_res_queried != None %}
+        <p> Initial Parameters and Model Settings </p><hr>
+        {% gizmo table_view table_model_calibration %} <br><br>
+    {% endif %}
+
+<p> Timeseries Results </p><hr>
+{% gizmo table_view table_model_result %}
+
+
+    <!--<p> ALL table_model_calibration_ALL </p>-->
+    <!--{% gizmo table_view table_model_calibration_ALL %}<br><br>-->
+
+    <!--<p> table_model_input_ALL </p>-->
+    <!--{% gizmo table_view table_model_input_ALL %}<br><br>-->
+
+
+{%endblock%}
+
+
+
+{% block app_actions %}
+{% endblock %}
+
+
+
+
+{% block content_dependent_styles %}
+  {{ block.super }}
+  <link href="{% static 'hydrotop/css/model_input.css' %}" rel="stylesheet"/>
+{% endblock %}
+
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'hydrotop/js/tables.js' %} " type="text/javascript"></script>
+{% endblock %}
+
