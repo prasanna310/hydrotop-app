@@ -133,8 +133,8 @@ def model_input(request):
                                multiple=False,
                                options=[('Download geospatial files', 'download'), ('Prepare TOPKAPI model', 'TOPKAPI'),
                                         ('Prepare TOPNET input-files', 'TOPNET')],
-                               initial=['TOPKAPI'],
-                               original=['TOPKAPI']
+                               initial=['download'],
+                               original=['download']
                                )
 
     # # html form to django form
