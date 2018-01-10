@@ -1320,10 +1320,19 @@ def model_input1(request):
 def job_check(request):
     OAuthHS = get_OAuthHS(request)
     user_name = OAuthHS['user_name']
+    res_id = None
 
     try:
+        # :TODO request from model_input page.
+        # ---------- Lets do this tomorrow ------------------
+
+
+        print 'Request has been processed and sent! Please refresh periodically to see if the request is complete.'
         res_id = request.GET.get('res_id', None)
-        #:TODO display resource status, completed or incomplete. AS A POP-UP
+        if res_id != None:
+            pass
+            #:TODO display resource status based on res_id, completed or incomplete. AS A POP-UP
+
     except:
         pass
 
@@ -1337,7 +1346,7 @@ def job_check(request):
     hs_model_resources_response = app_utils.create_model_resources_from_hs(OAuthHS)
     hs_model_resources_list = hs_model_resources_response['hs_model_resources_list']
     hs_model_resources_table = app_utils.create_tethysTableView(
-                                model_input_cols=('Date_created', 'Request_name',  'Resource_id'),
+                                model_input_cols=('Date_created', 'Simulation_name',  'Resource_id'),
                                 model_input_rows=hs_model_resources_list)
 
 
