@@ -574,6 +574,8 @@ function area_domain(){
         document.forms["inputs"]["init_channel_flow"].value = 0.001* x ;
 
 
+
+
         return bb_area;
 
 }

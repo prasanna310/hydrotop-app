@@ -212,6 +212,9 @@ def create_model_input_dict_from_request(request,user_name ):
         inputs_dictionary['init_overland_vol'] = float(request.POST['init_overland_vol'])
         inputs_dictionary['init_channel_flow'] = float(request.POST['init_channel_flow'])
 
+        # JOB id
+        inputs_dictionary['job_id'] = get_id_from_db(user_name)
+
     print 'inputs_dictionary', inputs_dictionary
     return inputs_dictionary
 
@@ -714,6 +717,73 @@ def create_model_calib_list(given_user_name=None, return_hs_resource_id=True, re
 
     return simulation_names_list
 
+def create_model_resources_from_hs(OAuthHS ):
+    # # return_dict['hs_model_resources_list'] = = [ [title, date created, resource id], [] ...]
+
+    filter_in_title = 'PyTOPKAPI'       # this could be job id. This string should appear in title
+    return_dict = {'error':None}
+    hs_model_resources_list = []
+
+    try:
+        hs = OAuthHS['hs']
+        user_name = OAuthHS['user_name']
+
+        # resources = [resource for resource in hs.resources(type='ModelInstanceResource', creator=user_name) ]
+        modelResources = [resource for resource in hs.resources(creator=user_name)
+                          if filter_in_title in resource['resource_title']]
+
+        # create list for each resource- [title, date created, resource id]
+        for resource in modelResources:
+            # date_last_updated = resource['date_last_updated']
+            # resource_type = resource['date_last_updated']
+            date_created = resource['date_last_updated']
+            resource_id = resource['resource_id']
+            resource_title = resource['resource_title']
+            job_id = resource['resource_title'].split("-")[-1]
+
+
+            hs_model_resources_list.append([resource_title.split(" ")[-1], date_created, resource_id, job_id])
+    except:
+
+        return_dict['error'] = 'Error querying hydroshare'
+
+    return_dict['hs_model_resources_list'] = hs_model_resources_list
+    return return_dict
+
+
+def create_model_run_list_from_db(OAuthHS):
+    # # return_dict['hs_model_resources_list'] = = [ [title, date created, resource id], [] ...]
+
+    return_dict = {'error': None}
+    db_model_run_list = []
+
+    try:
+        user_name = OAuthHS['user_name']
+
+        from .model import engine, SessionMaker, Base, model_inputs_table
+        from tethys_sdk.gizmos import SelectInput
+
+        Base.metadata.create_all(engine)  # Create tables
+        session = SessionMaker()  # Make session
+
+
+        # Query DB, filter 1) username 2) model used=TOPKAPI
+        simulations_queried = session.query(model_inputs_table).filter(
+            model_inputs_table.user_name == user_name).all()  # searches just the id input in URL
+
+        for record in simulations_queried:
+            db_model_run_list.append([record.id, record.simulation_name])
+        print 'Simulation list queried: ', db_model_run_list
+    except Exception, e:
+
+        return_dict['error'] = 'Error querying database'
+        print 'Error!!  querying database. Error= ', e
+
+
+
+    return_dict['db_model_run_list'] = db_model_run_list
+    return return_dict
+
 
 def get_box_from_tif_or_shp(fname):
 
@@ -738,6 +808,27 @@ def get_box_from_tif_or_shp(fname):
     maxy =float(json_data['maxy'])
 
     return maxx, miny, minx, maxy
+
+def get_id_from_db(user_name):
+    from .model import engine, SessionMaker, Base, model_inputs_table
+    from tethys_sdk.gizmos import SelectInput
+
+    Base.metadata.create_all(engine)  # Create tables
+    session = SessionMaker()  # Make session
+    job_id = 0
+
+    # Query DB, filter 1) username 2) model used=TOPKAPI
+    simulations_queried = session.query(model_inputs_table).filter(
+        model_inputs_table.user_name == user_name).all()  # searches just the id input in URL
+
+    for record in simulations_queried:
+        tem_job_id = record.id
+        if tem_job_id > job_id:
+            job_id = tem_job_id
+
+    print 'JOB ID=', job_id
+    return job_id
+
 
 
 def meter_to_degree(distance_in_m, avg_lat):
@@ -1654,6 +1745,20 @@ def create_tethysTableView_timeseries_for_hs_res( hs_resource_id):
     return table_query
 
 
+def create_tethysTableView(model_input_cols, model_input_rows):
+    from tethys_sdk.gizmos import TableView
+    from .model import  SessionMaker, model_inputs_table
+
+    session = SessionMaker()  # Make session
+
+    table_query = TableView(column_names=model_input_cols,
+                            rows=model_input_rows,
+                            hover=True,
+                            striped=True,
+                            bordered=False,
+                            condensed=True)
+    return table_query
+
 
 def create_calibration_list(calib_ids=None , hs_resource_id = None):
     from tethys_sdk.gizmos import SelectInput
@@ -2383,6 +2488,7 @@ def call_runpytopkapi(inputs_dictionary,OAuthHS, out_folder=''):
     """
 
     valid_simulation_name = ''.join(e for e in inputs_dictionary['simulation_name'] if e.isalnum())
+    valid_simulation_name = valid_simulation_name + "_JobID-"+ inputs_dictionary['job_id']
     epsgCode = 102003 # North America Albers Equal Area Conic
 
     subsetDEM_request = {u'output_raster': u'http://129.123.9.159:20199/files/data/user_6/DEM84.tif'}

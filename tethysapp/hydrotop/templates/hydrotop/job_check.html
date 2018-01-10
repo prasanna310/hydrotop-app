@@ -1,0 +1,61 @@
+{% extends "hydrotop/base.html" %}
+
+{% load staticfiles %}
+
+{% load tethys_gizmos %}
+
+
+
+
+
+
+
+{% block app_navigation %}
+
+
+{% endblock %}
+
+
+
+
+
+{% block app_content %}
+<p> JOB ID: {{last_jobid}}</p>
+<p> Filtered: {{modelResources}}</p>
+<hr>
+<p> Table </p>
+ {% gizmo table_view hs_model_resources_table %}
+
+<hr>
+<p> Table </p>
+ {% gizmo table_view simulation_names_table %}
+
+
+
+{%endblock%}
+
+
+
+
+
+
+
+{% block app_actions_override %}
+
+{% endblock %}
+
+
+
+
+
+{% block scripts %}
+{{ block.super }}
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJVwfz-TJWiZCvLmgYHv2yHYc8vagp7V0&callback=initMap&libraries=drawing,places">
+</script>
+<script src="{% static 'hydrotop/js/job_check.js' %} " type="text/javascript"></script>
+{% endblock %}
+
+
+
+
+
