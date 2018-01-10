@@ -614,6 +614,30 @@ def create_simulation_list_after_querying_db(given_user_name=None, return_hs_res
 
     return simulation_names_list
 
+def create_simulation_list_after_querying_hs(OAuthHS):
+    # returns a tethys gizmo or a drop down list, which should be referenced in html with name = 'simulation_names_list'
+    # if return_hs_resource_id == True,
+    from tethys_sdk.gizmos import SelectInput
+
+
+    try:
+        hs_model_resources_response = create_model_resources_from_hs(OAuthHS)
+        hs_model_resources_list = hs_model_resources_response['hs_model_resources_list']
+        hs_model_resources_tuple = [(item[1],item[2]) for item in hs_model_resources_list]
+        print hs_model_resources_tuple, "----***************---"
+
+    except Exception,e:
+        hs_model_resources_tuple = [( 'No saved model', '44248166e239490383f23f6568de5fcf')]
+        print '**************Warning: Could not query the db to create a list of existing simulation. Error = >',e
+
+    simulation_names_list = SelectInput(display_text='Saved Models in HydroShare',
+                                     name='simulation_names_list',
+                                     multiple=False,
+                                     options= hs_model_resources_tuple  )#[ (  simulations_queried[0].id, '1'),  (  simulations_queried[1].simulation_name, '2'  ),  (   simulations_queried[1].user_name, '2'  )]
+
+    return simulation_names_list
+
+
 def create_model_input_list(given_user_name=None, return_hs_resource_id=True, return_model_input_id = False):
     # returns a tethys gizmo or a drop down list, which should be referenced in html with name = 'simulation_names_list'
     # if return_hs_resource_id == True,
@@ -720,7 +744,7 @@ def create_model_calib_list(given_user_name=None, return_hs_resource_id=True, re
 def create_model_resources_from_hs(OAuthHS ):
     # # return_dict['hs_model_resources_list'] = = [ [title, date created, resource id], [] ...]
 
-    filter_in_title = 'PyTOPKAPI'       # this could be job id. This string should appear in title
+    filter_in_title = 'Model files for PyTOPKAPI simulation of'       # this could be job id. This string should appear in title
     return_dict = {'error':None}
     hs_model_resources_list = []
 
@@ -736,13 +760,12 @@ def create_model_resources_from_hs(OAuthHS ):
         for resource in modelResources:
             # date_last_updated = resource['date_last_updated']
             # resource_type = resource['date_last_updated']
+            # job_id = resource['resource_title'].split("-")[-1]
             date_created = resource['date_last_updated']
-            resource_id = resource['resource_id']
-            resource_title = resource['resource_title']
-            job_id = resource['resource_title'].split("-")[-1]
+            resource_title =  resource['resource_title']
+            resource_id = resource['resource_id'] #'<html><a href="http://www.hydroshare.org/resources/'+ resource['resource_id']  + '"></a></html>'
 
-
-            hs_model_resources_list.append([resource_title.split(" ")[-1], date_created, resource_id, job_id])
+            hs_model_resources_list.append([date_created, resource_title.split(" ")[-1],  resource_id])
     except:
 
         return_dict['error'] = 'Error querying hydroshare'

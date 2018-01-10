@@ -1323,26 +1323,38 @@ def job_check(request):
 
     try:
         res_id = request.GET.get('res_id', None)
+        #:TODO display resource status, completed or incomplete. AS A POP-UP
     except:
         pass
+
+    # DROPDOWN
+    simulation_names_dropdown = app_utils.create_simulation_list_after_querying_hs(OAuthHS)
+    # simulation_names_dropdown = app_utils.create_simulation_list_after_querying_db(OAuthHS['user_name'])
+    existing_sim_res_id = TextInput(display_text='', name='existing_sim_res_id', initial='')
+
 
     # QUERY HYDROSHARE: list all the resources that are prepared by the model
     hs_model_resources_response = app_utils.create_model_resources_from_hs(OAuthHS)
     hs_model_resources_list = hs_model_resources_response['hs_model_resources_list']
     hs_model_resources_table = app_utils.create_tethysTableView(
-                                model_input_cols=('resource_title', 'date_created', 'resource_id',' job_id'),
+                                model_input_cols=('Date_created', 'Request_name',  'Resource_id'),
                                 model_input_rows=hs_model_resources_list)
 
-    # QUERY DATABASE: list all the resources that are SENT
+
+    # QUERY DATABASE: list all the resources that are SENT     ------ NOT USED -------
     simulation_names_response = app_utils.create_model_run_list_from_db(OAuthHS)
     simulation_names_list = simulation_names_response['db_model_run_list']
     simulation_names_table = app_utils.create_tethysTableView(model_input_cols=('ID', 'Simulation_name'),
                                                                model_input_rows=simulation_names_list)
-
     last_jobid = app_utils.get_id_from_db(user_name)
+
+
 
     context = {
         'hs_model_resources_list':hs_model_resources_list,
+        'existing_sim_res_id':existing_sim_res_id,
+
+        'simulation_names_dropdown':simulation_names_dropdown,
         'hs_model_resources_table':hs_model_resources_table,
         'simulation_names_table':simulation_names_table,
         'last_jobid':last_jobid
