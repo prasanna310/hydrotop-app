@@ -1,0 +1,45 @@
+#nav p {
+    color: white;
+    margin-top:30px;
+    margin-right:30px;
+    display:inline-block;
+    font-size:220%
+}
+
+#nav ul {
+    display: inline-block;
+    margin-top:35px
+}
+
+#nav ul li {
+    display: inline;
+    margin-right:40px;
+}
+
+#nav ul li a{
+    font-size: 150%;
+    color:white;
+    text-decoration: none;
+}
+
+#nav ul li a:hover {
+    font-size: 150%;
+    color: #0073e6;
+    text-decoration: none;
+}
+
+#icon a {
+    text-decoration:none;
+    font-size:150%;
+    color: #737373;
+    margin-top: 30px;
+}
+
+#icon a:hover {
+    color: #000000;
+}
+
+#icon img {
+    width:200px;
+    hight:200px;
+}
