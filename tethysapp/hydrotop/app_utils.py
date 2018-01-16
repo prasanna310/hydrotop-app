@@ -760,7 +760,7 @@ def create_model_resources_from_hs(OAuthHS ):
         for resource in modelResources:
             date_created = resource['date_last_updated']
             resource_title =  resource['resource_title']
-            resource_id = "http://www.hydroshare.org/resources/"+ resource['resource_id']
+            resource_id = resource['resource_id']
 
             hs_model_resources_list.append([date_created, resource_title.split(" ")[-1],  resource_id])
     except:
