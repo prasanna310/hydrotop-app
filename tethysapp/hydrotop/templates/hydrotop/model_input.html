@@ -16,7 +16,7 @@
     <p id="test_para">Prepare the hydrologic model by entering the inputs (in the three steps) below. </p>
 
 
-  <form id ="inputs"  method="post" action="{% url 'hydrotop:model_run' %}" enctype="multipart/form-data" onsubmit="validateOutlet();">
+  <form id ="inputs"  method="post" action="{% url 'hydrotop:check_status' %}" enctype="multipart/form-data" onsubmit="validateOutlet();">
   {% csrf_token %}
 
     <!--http://stackoverflow.com/questions/29151241/using-bootstrap-collapse-on-radio-buttons-to-show-hide-content-no-js-->

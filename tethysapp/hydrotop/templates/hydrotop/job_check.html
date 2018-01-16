@@ -1,4 +1,4 @@
-{% extends "hydrotop/base.html" %}
+{% extends "hydrotop/base2.html" %}
 
 {% load staticfiles %}
 
@@ -13,7 +13,7 @@
 {% block app_navigation %}
   <form id ="load_simulation"  method="post" action="{% url 'hydrotop:model_run' %}" enctype="form-data">
     {% csrf_token %}
-          Load the simulation saved in HydroShare.
+      <br>
           {% gizmo select_input simulation_names_dropdown %}
 
       <a style="color:grey;" data-toggle="collapse" data-target="#hs_res_id_for_model"> Enter HydroShare resource id instead</a>
@@ -21,11 +21,9 @@
 
 
   <input type="submit" name="simulation-load" class="btn btn-default" value="Load simulation" > <!--This line looks pretty useless to me-->
-  <input type="hidden" name="load_simulation_name" value= "{{hs_resource_id_created}}">   <!--This too is kinda useless, because hs_resource_id is not know in this html -->
+  <input type="hidden" id="msg" value= "{{msg}}">   <!--This too is kinda useless, because hs_resource_id is not know in this html -->
 
   </form>
-
-
 
 {% endblock %}
 
@@ -35,13 +33,10 @@
 
 {% block app_content %}
 
-
-<p> <strong> Completed Simulation list </strong> </p>
+<p> <strong> Completed works... </strong> </p>
  {% gizmo table_view hs_model_resources_table %}
 
 <hr>
-
-
 
 
 {%endblock%}
@@ -51,9 +46,7 @@
 
 
 
-
 {% block app_actions_override %}
-
 {% endblock %}
 
 

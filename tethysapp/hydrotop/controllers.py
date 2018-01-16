@@ -93,12 +93,12 @@ def model_input(request):
     timestep = TextInput(display_text='Timestep in hrs', name='timestep',
                          initial=initials[watershed_name]['del_t'])  # , append="hours"
     simulation_start_date_picker = DatePicker(name='simulation_start_date_picker', display_text='Start Date',
-                                              autoclose=True, format='mm-dd-yyyy', start_date='10-15-2005',
+                                              autoclose=True, format='mm-dd-yyyy', start_date='10-01-1988',
                                               # '01-01-2010'
                                               start_view='year', today_button=True,
                                               initial=initials[watershed_name]['t0'])
     simulation_end_date_picker = DatePicker(name='simulation_end_date_picker', display_text='End Date',
-                                            autoclose=True, format='mm-dd-yyyy', start_date='10-15-2005',
+                                            autoclose=True, format='mm-dd-yyyy', start_date='10-01-1988',
                                             # '01-01-2010'
                                             start_view='year', today_button=False,
                                             initial=initials[watershed_name]['t'])
@@ -1317,24 +1317,58 @@ def model_input1(request):
 
     return render(request, 'hydrotop/model_input1.html', context)
 
-def job_check(request):
+def check_status(request):
     OAuthHS = get_OAuthHS(request)
     user_name = OAuthHS['user_name']
-    res_id = None
+    msg = None
 
     try:
-        # :TODO request from model_input page.
         # ---------- Lets do this tomorrow ------------------
+        if request.is_ajax and request.method == 'POST':
+            msg = 'Request has been processed and sent! Please refresh periodically to see if the request is complete.'
 
 
-        print 'Request has been processed and sent! Please refresh periodically to see if the request is complete.'
+            # *** Based on https://stackoverflow.com/questions/14920384/stop-code-after-time-period ***
+            import multiprocessing
+            import time
+            def process_request():
+                print "Current Time", datetime.now()
+
+                inputs_dictionary = app_utils.create_model_input_dict_from_request(request, user_name)
+                model_engine_chosen = request.POST['model_engine']
+                msg = 'Request (for %s) has been processed and sent! Please refresh periodically to see if the request is complete.' % ( model_engine_chosen)
+
+                if model_engine_chosen.lower() == 'download':  # request.POST.getlist('download_choice2[]') != []:
+                    download_choice = request.POST.getlist('download_choice2[]')
+                    json_data = app_utils.download_geospatial_and_forcing_files(inputs_dictionary, download_request=download_choice, OAuthHS=OAuthHS)
+
+                elif model_engine_chosen.lower() == 'topnet':
+                    json_data = app_utils.run_topnet(inputs_dictionary, OAuthHS)
+
+                elif model_engine_chosen.lower() == 'topkapi':
+                    json_data = app_utils.call_runpytopkapi(inputs_dictionary=inputs_dictionary, OAuthHS=OAuthHS)
+
+            p = multiprocessing.Process(target=process_request, name="process_request", args=())
+            p.start()
+
+            # Wait 5 seconds for foo
+            time.sleep(5)
+
+            # Terminate foo
+            p.terminate()
+
+            # Cleanup
+            p.join()
+
+
         res_id = request.GET.get('res_id', None)
+        
         if res_id != None:
-            pass
+            msg= 'This functionality not active yet'
             #:TODO display resource status based on res_id, completed or incomplete. AS A POP-UP
 
     except:
-        pass
+        print '----- Error trying to get var res_id ----- '
 
     # DROPDOWN
     simulation_names_dropdown = app_utils.create_simulation_list_after_querying_hs(OAuthHS)
@@ -1343,10 +1377,10 @@ def job_check(request):
 
 
     # QUERY HYDROSHARE: list all the resources that are prepared by the model
-    hs_model_resources_response = app_utils.create_model_resources_from_hs(OAuthHS)
+    hs_model_resources_response = app_utils.create_hs_resources_table(OAuthHS)
     hs_model_resources_list = hs_model_resources_response['hs_model_resources_list']
     hs_model_resources_table = app_utils.create_tethysTableView(
-                                model_input_cols=('Date_created', 'Simulation_name',  'Resource_id'),
+                                model_input_cols=('Date created', 'Resource Name',  'Resource type', 'Resource location'),
                                 model_input_rows=hs_model_resources_list)
 
 
@@ -1366,7 +1400,8 @@ def job_check(request):
         'simulation_names_dropdown':simulation_names_dropdown,
         'hs_model_resources_table':hs_model_resources_table,
         'simulation_names_table':simulation_names_table,
-        'last_jobid':last_jobid
+        'last_jobid':last_jobid,
+        'msg':msg
 
     }
 

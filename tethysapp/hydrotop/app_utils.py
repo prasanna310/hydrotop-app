@@ -624,13 +624,12 @@ def create_simulation_list_after_querying_hs(OAuthHS):
         hs_model_resources_response = create_model_resources_from_hs(OAuthHS)
         hs_model_resources_list = hs_model_resources_response['hs_model_resources_list']
         hs_model_resources_tuple = [(item[1],item[2]) for item in hs_model_resources_list]
-        print hs_model_resources_tuple, "----***************---"
 
     except Exception,e:
-        hs_model_resources_tuple = [( 'No saved model', '44248166e239490383f23f6568de5fcf')]
+        hs_model_resources_tuple = [( 'Sample model (Read Only)', '44248166e239490383f23f6568de5fcf')]
         print '**************Warning: Could not query the db to create a list of existing simulation. Error = >',e
 
-    simulation_names_list = SelectInput(display_text='Saved Models in HydroShare',
+    simulation_names_list = SelectInput(display_text='Load Model from HydroShare',
                                      name='simulation_names_list',
                                      multiple=False,
                                      options= hs_model_resources_tuple  )#[ (  simulations_queried[0].id, '1'),  (  simulations_queried[1].simulation_name, '2'  ),  (   simulations_queried[1].user_name, '2'  )]
@@ -744,7 +743,8 @@ def create_model_calib_list(given_user_name=None, return_hs_resource_id=True, re
 def create_model_resources_from_hs(OAuthHS ):
     # # return_dict['hs_model_resources_list'] = = [ [title, date created, resource id], [] ...]
 
-    filter_in_title = 'Model files for PyTOPKAPI simulation of'       # this could be job id. This string should appear in title
+    filter_in_title_model = 'Model files for PyTOPKAPI simulation of'       # this could be job id. This string should appear in title
+
     return_dict = {'error':None}
     hs_model_resources_list = []
 
@@ -754,16 +754,13 @@ def create_model_resources_from_hs(OAuthHS ):
 
         # resources = [resource for resource in hs.resources(type='ModelInstanceResource', creator=user_name) ]
         modelResources = [resource for resource in hs.resources(creator=user_name)
-                          if filter_in_title in resource['resource_title']]
+                          if (filter_in_title_model in resource['resource_title'])  ]
 
         # create list for each resource- [title, date created, resource id]
         for resource in modelResources:
-            # date_last_updated = resource['date_last_updated']
-            # resource_type = resource['date_last_updated']
-            # job_id = resource['resource_title'].split("-")[-1]
             date_created = resource['date_last_updated']
             resource_title =  resource['resource_title']
-            resource_id = resource['resource_id'] #'<html><a href="http://www.hydroshare.org/resources/'+ resource['resource_id']  + '"></a></html>'
+            resource_id = "http://www.hydroshare.org/resources/"+ resource['resource_id']
 
             hs_model_resources_list.append([date_created, resource_title.split(" ")[-1],  resource_id])
     except:
@@ -772,6 +769,52 @@ def create_model_resources_from_hs(OAuthHS ):
 
     return_dict['hs_model_resources_list'] = hs_model_resources_list
     return return_dict
+
+def create_hs_resources_table(OAuthHS ):
+    # # return_dict['hs_model_resources_list'] = = [ [title, date created, resource id], [] ...]
+
+    filter_in_title_model = 'Model files for PyTOPKAPI simulation of'       # this could be job id. This string should appear in title
+    filter_in_title_files = 'files prepared using HydroTops for'
+    filter_in_title_topnet = 'Input-files for TOPNET model'
+
+    return_dict = {'error':None}
+    hs_model_resources_list = []
+
+    try:
+        hs = OAuthHS['hs']
+        user_name = OAuthHS['user_name']
+
+        # resources = [resource for resource in hs.resources(type='ModelInstanceResource', creator=user_name) ]
+        modelResources = [resource for resource in hs.resources(creator=user_name)
+                          if ( (filter_in_title_model in resource['resource_title']) or
+                               (filter_in_title_files in resource['resource_title']) or
+                                (filter_in_title_topnet in resource['resource_title']) ) ]
+
+        print '# of qualifying modelResources-', len(modelResources)
+
+        # create list for each resource- [title, date created, resource id]
+        for resource in modelResources:
+            date_created = resource['date_last_updated']
+            resource_title =  resource['resource_title']
+            resource_id = "https://www.hydroshare.org/resource/"+ resource['resource_id']
+
+
+            if filter_in_title_model in resource['resource_title']:
+                resource_type = 'PyTOPKAPI model instance'
+            if filter_in_title_files in resource['resource_title']:
+                resource_type = 'Hydrologic files'
+            if filter_in_title_topnet in resource['resource_title']:
+                resource_type = 'TOPNET input-files'
+
+            hs_model_resources_list.append([date_created, resource_title.split(" ")[-1], resource_type,  resource_id])
+    except:
+        return_dict['error'] = 'Error querying hydroshare'
+
+    return_dict['hs_model_resources_list'] = hs_model_resources_list
+    import time
+    hs_model_resources_list.sort(key=lambda x: time.strptime(x[0], '%m-%d-%Y')[0:6], reverse=True)
+    return return_dict
+
 
 
 def create_model_run_list_from_db(OAuthHS):

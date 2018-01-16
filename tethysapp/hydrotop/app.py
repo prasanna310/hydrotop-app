@@ -37,9 +37,9 @@ class Hydrotop(TethysAppBase):
                            url='hydrotop/model_run',
                            controller='hydrotop.controllers.model_run'),
 
-                    UrlMap(name='job_check',
+                    UrlMap(name='check_status',
                            url='hydrotop/check_status',
-                           controller='hydrotop.controllers.job_check'),
+                           controller='hydrotop.controllers.check_status'),
 
 
                     UrlMap(name='visualize_shp',
