@@ -1,0 +1,376 @@
+{% extends "hydrotop/base.html" %}
+
+{% load staticfiles %}
+
+{% load tethys_gizmos %}
+
+
+
+
+
+
+
+{% block app_navigation %}
+
+    <h3>Inputs for the model </h3>
+    <p id="test_para">Prepare the hydrologic model by entering the inputs (in the three steps) below. </p>
+
+
+  <form id ="inputs"  method="post" action="{% url 'hydrotop:model_run' %}" enctype="multipart/form-data" onsubmit="validateOutlet();">
+  {% csrf_token %}
+
+    <!--http://stackoverflow.com/questions/29151241/using-bootstrap-collapse-on-radio-buttons-to-show-hide-content-no-js-->
+    <!--<input type="radio" name="group1" value="1" data-toggle="collapse" data-parent="#accordion" data-target="#collapseOne" >-->
+    <!--<input type="radio" name="group1" value="2" data-toggle="collapse" data-parent="#accordion" data-target="#collapseTwo">-->
+    <!--<input type="radio" name="group1" value="3" data-toggle="collapse" data-parent="#accordion" data-target="#collapseThree">-->
+
+
+    <!--Bootstrap panels (accordion) for clean looking inputs  -->
+    <div class="inputs_as_accordion" id="inputs_as_accordion">
+
+        <!--             First Input Section                  -->
+        <div class="panel panel-default">
+            <div class="panel-heading" data-toggle="collapse" data-target="#generalInputs">
+                <h4 class="panel-title">    1. General Inputs    </h4>
+            </div>
+
+            <div id="generalInputs" class="panel-collapse collapse in">
+                <div class="panel-body">
+
+                      {% gizmo text_input simulation_name %}
+                      {% gizmo text_input USGS_gage %}
+
+                      <table style="width:100%">
+                              <tr>
+                                    <th> {% gizmo date_picker simulation_start_date_picker %} </th>
+                                    <th>  {% gizmo date_picker simulation_end_date_picker %} </th>
+                              </tr>
+                      </table>
+                </div>
+            </div>
+
+        </div>
+
+
+
+        <!--             Second Input Section                  -->
+        <div class="panel panel-default">
+            <div class="panel-heading" data-toggle="collapse" data-target="#domainInputs">
+                <h4 class="panel-title">
+                    2. The domain
+                </h4>
+            </div>
+            <div id="domainInputs" class="panel-collapse collapse">
+                <div class="panel-body">
+
+                                    <input type="radio"  name="domain_radio" value="1" data-toggle="collapse" data-parent="#accordion" data-target="#specify" checked /> Specify long lat, or draw on map
+
+                                    <div id="specify" class="panel-collapse collapse" >
+                                      <br> <strong> OUTLET  </strong>
+
+                                      <table style="width:100%">
+
+
+                                          <tr>
+                                                <th onChange="init()"> {% gizmo text_input outlet_x %} </th>
+                                                <th onChange="init()"> {% gizmo text_input outlet_y %} </th>
+                                          </tr>
+
+                                        </table>
+                                        <br>
+
+                                      <strong> BOUNDING BOX </strong> <br>
+                                      <table width="100%">
+                                          <tr>
+                                                <th> </th>
+                                                <th> {% gizmo text_input box_topY %}</th>
+                                                <th> </th>
+                                          </tr>
+                                          <tr>
+                                                <td>{% gizmo text_input box_leftX %}</td>
+                                                <td></td>
+                                                <td>{% gizmo text_input box_rightX %}</td>
+                                          </tr>
+                                          <tr>
+                                                <td></td>
+                                                <td > {% gizmo text_input box_bottomY %}</td>
+                                                <td></td>
+                                          </tr>
+
+                                      </table>
+                                    </div>
+
+                                    <br><input type="radio" name="domain_radio" value="1" data-toggle="collapse" data-parent="#accordion" data-target="#upload" > Upload shp files or TIF
+
+                                    <div id="upload" class="collapse" >
+                                      <table width="20%">
+                                          <!--<tr>-->
+                                              <!--<th> Outlet </th>-->
+                                              <!--<th><input type="file" name="outlet_shp" accept=".shp, .shx, .dbf, .prj, .geojson, .json, .js /*" title=" " multiple/> </th>-->
+                                              <!--&lt;!&ndash;<th><input type="submit" name="submit" value="Upload" /> </th>&ndash;&gt;-->
+                                          <!--</tr>-->
+                                          <form id ="input_shp"  method="post" action="{% url 'hydrotop:visualize_shp' %}" enctype="multipart/form-data">
+                                              <tr>
+                                                  <!--<th> Watershed </th>-->
+                                                  <th><input type="file" name="watershed_upload"  accept=".shp, .shx, .dbf, .prj, .zip, .tif, .tiff/*" title="&nbsp;" multiple/> </th>
+                                              </tr>
+
+                                              <tr>
+        <!--<th><input type="submit" name="submit" value="Upload" /> </th>-->
+                                                  <!--<th>  </th>-->
+                                                  <th> <input type="button" name="input_shp-form" class="btn btn-default" value="OK"></th>
+                                              </tr>
+                                          </form>
+                                       </table>
+                                    </div>
+
+                                    <!--Upload geojson-->
+                                    <br><input type="radio" name="domain_radio" value="1" data-toggle="collapse" data-parent="#accordion" data-target="#upload_geojson" > Upload geojson files for watershed
+
+                                    <div id="upload_geojson" class="collapse" >
+                                      <table width="20%">
+                                          <tr>
+                                              <!--<th> Outlet </th>-->
+                                              <!--<th><input type="file" id="outlet_geojson" accept=" .geojson, .json, .js /*" title=" " /> </th>-->
+                                              <!--&lt;!&ndash;<th><input type="submit" name="submit" value="Upload" /> </th>&ndash;&gt;-->
+                                          <!--</tr>-->
+                                          <tr>
+                                              <th> <input type="file" id="watershed_geojson"  accept=" .geojson, .json, .js /*" title="&nbsp;"  /> </th>
+                                              <!--<th><input type="submit" name="submit" value="Upload" /> </th>-->
+                                          </tr>
+                                          <tr>
+                                                <th> <p onclick="loadFileAsText()">Click here to Upload </p></th>
+                                          </tr>
+                                       </table>
+                                    </div>
+
+
+
+
+                </div>
+            </div>
+        </div>
+
+
+
+        <!--             Third Input Section                  -->
+        <div class="panel panel-default">
+            <div class="panel-heading" data-toggle="collapse" data-target="#additionalInputs">
+                <h4 class="panel-title">
+                    3. Additional Inputs
+                </h4>
+            </div>
+            <div id="additionalInputs" class="panel-collapse collapse">
+                <div class="panel-body">
+
+                     <table>
+                         <tr >{% gizmo text_input cell_size %} </tr>
+                         <tr> {% gizmo text_input threshold %}</tr>
+                         <tr> {% gizmo select_input model_engine %} </tr>
+
+
+                     </table>
+
+                    <div id="todo_parameters" style="display: none" >
+                         <table>
+                             <tr >{% gizmo text_input timestep %} </tr>
+                             <tr> {% gizmo select_input timeseries_source %}</tr>
+                         </table>
+                    </div>
+
+                    <div id="topkapi_initials" style="display: none">
+                       <table>
+                           <tr >{% gizmo text_input init_soil_percentsat %} </tr>
+                             <tr >{% gizmo text_input init_overland_vol %} </tr>
+                             <tr>{% gizmo text_input init_channel_flow %} </tr>
+
+                         </table>
+                    </div>
+
+                    <div id="topnet_input" style="display: none">
+                       <table>
+                           <tr >{% gizmo text_input threshold_topnet %} </tr>
+                             <tr >{% gizmo text_input pk_min_threshold %} </tr>
+                             <tr>{% gizmo text_input pk_max_threshold %} </tr>
+                             <tr> {% gizmo text_input pk_num_thershold %}</tr>
+
+
+                         </table>
+                    </div>
+
+                    <div id="download_input" style="display: none">
+                        <p> Select download options below</p>
+
+                          <input type="checkbox" id="download_terrain" name="download_choice2[]" value="terrain" checked>
+                          <label for="download_terrain">download terrain files</label> <br>
+
+                          <input type="checkbox" id="download_soil" name="download_choice2[]" value="soil">
+                          <label for="download_soil">download soil files</label> <br>
+
+                          <input type="checkbox" id="download_forcing" name="download_choice2[]" value="forcing">
+                          <label for="download_forcing">download forcing files</label> <br> <br>
+                          <!--{% gizmo text_input epsgCode %}-->
+
+
+                    </div>
+
+                    <div id="epsgcode_block" style="display: none">
+                        {% gizmo text_input epsgCode %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+      <input type="submit" name="input-form" class="btn btn-default" value="Send Request">
+
+
+
+
+  </form>
+
+  <hr>
+  <form id ="load_simulation"  method="post" action="{% url 'hydrotop:model_run' %}" enctype="form-data">
+    {% csrf_token %}
+
+        <hr>
+          Simulation already prepared? Load the previously saved simulation from the dropdown menu, or enter the HydroShare resource ID containing simulations files.
+            {% gizmo select_input simulation_names_list %}
+
+      <a style="color:grey;" data-toggle="collapse" data-target="#hs_res_id_for_model"> Enter HydroShare resource id instead</a>
+      <div class="collapse" id="hs_res_id_for_model">{% gizmo text_input existing_sim_res_id %}  </div>
+
+
+  <input type="submit" name="simulation-load" class="btn btn-default" value="Load simulation" > <!--This line looks pretty useless to me-->
+  <input type="hidden" name="load_simulation_name" value= "{{hs_resource_id_created}}">   <!--This too is kinda useless, because hs_resource_id is not know in this html -->
+
+  </form>
+
+<hr>
+
+{% endblock %}
+
+
+
+
+
+{% block app_content %}
+
+<!--Google map-->
+
+<div id='map-container' class="col-md-8" style="height: 90%;width: 100%">
+    <!-- app intro-->
+    <div id='title'>
+        <!--<h3 style="color:#0073e6">Input Data Preparation</h3>-->
+        <p style="font-size:100%">
+
+            <span data-toggle="collapse" data-target="#intro-detail" style="color: green; margin-bottom: 20px"><strong><u>Quick help</u></strong></span>
+        </p>
+        <div id="intro-detail" class="collapse" style="background-color:#f2f2f2">
+
+            <p style="font-size:100%">
+                Funtionalities supported by the app include: <br>
+
+            <table style="width:50%">
+              <tr>
+                <th>Action Supported</th>
+                <th>Brief Description</th>
+                <th>Availability</th>
+              </tr>
+              <tr>
+
+                <td>TOPKAPI model</td>
+                <td>Prepare a TOPKAPI model-instance, and run it</td>
+                <td>CONUS</td>
+              </tr>
+
+              <tr>
+                <td>TOPNET model</td>
+                <td>Prepare input-files for TOPNET <a href="https://github.com/nazmussazib/TOPNET_PreProcessing" target="_blank">(Sazib,2016)</a>.</td>
+                <td>Western US</td>
+              </tr>
+              <tr>
+                <td>Download data</td>
+                <td>Access to terrain,soil & forcing files</td>
+                <td>CONUS</td>
+              </tr>
+               <tr>
+                <td>Terrain Files </td>
+                <td>TauDEM assisted analysis</td>
+                <td>Global</td>
+              </tr>
+            </table> <br>
+
+
+            <div id='nav'>
+                <ul >
+                    <li><button type="button" class="btn btn-default" data-toggle="modal" data-target="#welcome-popup"> <img src="{% static 'hydrotop/images/icon_help2.png'%}" > </button> </li>
+
+                    <li><a href="{% static 'hydrotop/files/tutorials.pdf' %}" target="_blank"> <img src="{% static 'hydrotop/images/icon_pdf3.png'%}" > </a></li>
+                    <li><a href="https://github.com/prasanna310/hydrotop-app" target="_blank"> <img src="{% static 'hydrotop/images/icon_git.png'%}" >  </a></li>
+                    <!--<li><a href="https://github.com/prasanna310/hydrotop-app"><img src="{% static 'hydrotop/images/icon_youtube.png'%}" > </a></li>-->
+                    <li><a href="{% static 'hydrotop/files/thesis.pdf' %}" target="_blank"> <img src="{% static 'hydrotop/images/icon_thesis2.png'%}" >  </a></li>
+                    <li><a href="{% url 'hydrotop:tables' %}" target="_blank"> <img src="{% static 'hydrotop/images/icon_table3.png'%}" >  </a></li>
+                    <li><a href="/apps"> <img src="{% static 'hydrotop/images/icon_exit3.png'%}" >  </a></li>
+
+                  <!--<li><a href="/apps">Exit</a></li>-->
+                </ul>
+              </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- map -->
+    <p style="font-size:100%">You can draw the research domain and outlet point in the map (Only watershed delineation offerd for non-US area).</p>
+
+
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+
+    <input id="pac-input" style="width: 300px; height:30px;margin-top:4px" class="controls" type="text" placeholder="Search Box">
+    <p id="prompt" style="font-size:80%">   </p>
+
+
+
+    <div id="map" style="width:100%;height:700px"></div>
+    <p id="tdCursor" > Coordinates: </p>
+</div>
+
+
+{%endblock%}
+
+
+
+
+
+
+
+{% block app_actions_override %}
+
+{% endblock %}
+
+
+
+
+
+{% block scripts %}
+{{ block.super }}
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJVwfz-TJWiZCvLmgYHv2yHYc8vagp7V0&callback=initMap&libraries=drawing,places">
+</script>
+<script src="{% static 'hydrotop/js/model_Input.js' %} " type="text/javascript"></script>
+{% endblock %}
+
+
+
+
+
+{% block content_dependent_styles %}
+  {{ block.super }}
+  <link href="{% static 'hydrotop/css/model_input.css' %}" rel="stylesheet"/>
+{% endblock %}
