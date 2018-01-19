@@ -2764,7 +2764,30 @@ def call_runpytopkapi(inputs_dictionary,OAuthHS, out_folder=''):
 
     return out_folder + '/' + os.path.basename(responseJSON)  # ,      out_folder + '/' + os.path.basename(hydrograph_txt_file)
 
+def call_createandrunTOPKAPI(inputs_dictionary,OAuthHS):
+    import time
 
+
+
+    out_folder = generate_uuid_file_path()
+    inputs_dictionary_json_file = os.path.join( out_folder , 'inputs_topkapi.txt')
+
+    with open (inputs_dictionary_json_file, 'w') as f:
+        json.dump(inputs_dictionary,f, indent=4)
+
+    try:
+        json_hydrods_link = HDS.upload_file(inputs_dictionary_json_file)
+        print 'SUCCESS: Upload successful'
+    except Exception, e:
+        textfile = open('/home/ubuntuvm/error_upload2.html', 'w')
+        textfile.write(e)
+        textfile.close()
+
+
+
+
+
+    HDS.createandrunTOPKAPI(inputs_dictionary_json=json_hydrods_link, OAuthHS=OAuthHS)
 
 
 

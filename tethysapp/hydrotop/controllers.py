@@ -1346,7 +1346,8 @@ def check_status(request):
                     json_data = app_utils.run_topnet(inputs_dictionary, OAuthHS)
 
                 elif model_engine_chosen.lower() == 'topkapi':
-                    json_data = app_utils.call_runpytopkapi(inputs_dictionary=inputs_dictionary, OAuthHS=OAuthHS)
+                    json_data = app_utils.call_createandrunTOPKAPI(inputs_dictionary,OAuthHS)
+                    # json_data = app_utils.call_runpytopkapi(inputs_dictionary=inputs_dictionary, OAuthHS=OAuthHS)
 
             p = multiprocessing.Process(target=process_request, name="process_request", args=())
             p.start()
