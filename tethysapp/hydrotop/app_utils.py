@@ -62,8 +62,8 @@ def create_model_input_dict_from_request(request,user_name ):
                          "simulation_name": request.POST['simulation_name'],
                          "simulation_folder":'',
 
-                        "simulation_start_date": request.POST['simulation_start_date_picker'],
-                         "simulation_end_date": request.POST['simulation_end_date_picker'],
+                        "simulation_start_date": request.POST['simulation_start_date_picker'].replace("-",'/'),
+                         "simulation_end_date": request.POST['simulation_end_date_picker'].replace("-",'/'),
                          "USGS_gage": str(request.POST['USGS_gage']),
 
                          "outlet_y": round(  float(request.POST['outlet_y']),6),
@@ -623,7 +623,11 @@ def create_simulation_list_after_querying_hs(OAuthHS):
     try:
         hs_model_resources_response = create_model_resources_from_hs(OAuthHS)
         hs_model_resources_list = hs_model_resources_response['hs_model_resources_list']
-        hs_model_resources_tuple = [(item[1],item[2]) for item in hs_model_resources_list]
+        import time
+        hs_model_resources_list.sort(key=lambda x: time.strptime(x[0], '%m-%d-%Y')[0:6], reverse=True)
+
+        # hs_model_resources_tuple = [(item[1],item[2]) for item in hs_model_resources_list]
+        hs_model_resources_tuple = [(str(item[1])+"  ("+str(item[0])+")", item[2]) for item in hs_model_resources_list]
 
     except Exception,e:
         hs_model_resources_tuple = [( 'Sample model (Read Only)', '44248166e239490383f23f6568de5fcf')]
@@ -2765,29 +2769,40 @@ def call_runpytopkapi(inputs_dictionary,OAuthHS, out_folder=''):
     return out_folder + '/' + os.path.basename(responseJSON)  # ,      out_folder + '/' + os.path.basename(hydrograph_txt_file)
 
 def call_createandrunTOPKAPI(inputs_dictionary,OAuthHS):
-    import time
 
+    # out_folder = generate_uuid_file_path()
+    # inputs_dictionary_json_file = os.path.join( out_folder , 'inputs_topkapi.txt')
+    # with open (inputs_dictionary_json_file, 'w') as f:
+    #     json.dump(inputs_dictionary,f, indent=4)
+    #
+    # try:
+    #     json_hydrods_link = HDS.upload_file(inputs_dictionary_json_file)
+    #     print 'SUCCESS: Upload successful'
+    # except Exception, e:
+    #     textfile = open('/home/ubuntuvm/Upload_error.html', 'w')
+    #     textfile.write(e)
+    #     textfile.close()
 
-
-    out_folder = generate_uuid_file_path()
-    inputs_dictionary_json_file = os.path.join( out_folder , 'inputs_topkapi.txt')
-
-    with open (inputs_dictionary_json_file, 'w') as f:
-        json.dump(inputs_dictionary,f, indent=4)
+    inputs_dictionary_str = json.dumps(inputs_dictionary)
 
     try:
-        json_hydrods_link = HDS.upload_file(inputs_dictionary_json_file)
-        print 'SUCCESS: Upload successful'
+        HDS.createandrunTOPKAPI(inputs_dictionary_as_string=inputs_dictionary_str, OAuthHS=OAuthHS)
+        print 'Progress --> SUCCESS: CreateandrunTOPKAPI call'
     except Exception, e:
-        textfile = open('/home/ubuntuvm/error_upload2.html', 'w')
-        textfile.write(e)
+        textfile = open('/home/ubuntuvm/CreateandrunTOPKAPI_error.html', 'w')
+        textfile.write(str(e))
         textfile.close()
 
+def create_topnet_inputs(inputs_dictionary, OAuthHS):
+    inputs_dictionary_str = json.dumps(inputs_dictionary)
 
-
-
-
-    HDS.createandrunTOPKAPI(inputs_dictionary_json=json_hydrods_link, OAuthHS=OAuthHS)
+    try:
+        HDS.createTOPNETinputs(inputs_dictionary_as_string=inputs_dictionary_str, OAuthHS=OAuthHS)
+        print 'Progress --> SUCCESS: CreateTOPNET call'
+    except Exception, e:
+        textfile = open('/home/ubuntuvm/createTOPNET_error2.html', 'w')
+        textfile.write(str(e))
+        textfile.close()
 
 
 

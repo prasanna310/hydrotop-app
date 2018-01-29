@@ -12,7 +12,8 @@ from tethys_sdk.gizmos import *
 import sys, os, json
 import app_utils
 import numpy as np
-
+import multiprocessing
+import time
 from datetime import datetime
 
 
@@ -1323,16 +1324,24 @@ def check_status(request):
     msg = None
 
     try:
-        # ---------- Lets do this tomorrow ------------------
+        # ---------- When the request is from home page------------------
         if request.is_ajax and request.method == 'POST':
             msg = 'Request has been processed and sent! Please refresh periodically to see if the request is complete.'
 
+            # # delete these please
+            # try:
+            #     inputs_dictionary = app_utils.create_model_input_dict_from_request(request, user_name)
+            #     json_data = app_utils.create_topnet_inputs(inputs_dictionary, OAuthHS)
+            # except Exception,e:
+            #     textfile = open('/home/ubuntuvm/CreateandrunTOPNET_error.html', 'w')
+            #     textfile.write(str(e))
+            #     textfile.close()
+            # stop
 
-            # *** Based on https://stackoverflow.com/questions/14920384/stop-code-after-time-period ***
-            import multiprocessing
-            import time
+            ##*** Based on https://stackoverflow.com/questions/14920384/stop-code-after-time-period ***
+
             def process_request():
-                print "Current Time", datetime.now()
+                print "Progress --> Current Time", datetime.now()
 
                 inputs_dictionary = app_utils.create_model_input_dict_from_request(request, user_name)
                 model_engine_chosen = request.POST['model_engine']
@@ -1343,7 +1352,7 @@ def check_status(request):
                     json_data = app_utils.download_geospatial_and_forcing_files(inputs_dictionary, download_request=download_choice, OAuthHS=OAuthHS)
 
                 elif model_engine_chosen.lower() == 'topnet':
-                    json_data = app_utils.run_topnet(inputs_dictionary, OAuthHS)
+                    json_data = app_utils.create_topnet_inputs(inputs_dictionary, OAuthHS)
 
                 elif model_engine_chosen.lower() == 'topkapi':
                     json_data = app_utils.call_createandrunTOPKAPI(inputs_dictionary,OAuthHS)
@@ -1369,7 +1378,7 @@ def check_status(request):
             #:TODO display resource status based on res_id, completed or incomplete. AS A POP-UP
 
     except:
-        print '----- Error trying to get var res_id ----- '
+        print '----- Error trying to get var res_id. OR,... ----- '
 
     # DROPDOWN
     simulation_names_dropdown = app_utils.create_simulation_list_after_querying_hs(OAuthHS)
