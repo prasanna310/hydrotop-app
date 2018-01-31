@@ -63,10 +63,10 @@ def model_input(request):
                 'ymax': '40.8327', 'xmax': '-111.728', 'ymin': '40.772', 'xmin': '-111.834',
                 'init_soil_percentsat': '30'},
 
-        'Plunge': {'simulation_name': 'Plunge_demo', 'USGS_gage': '11055500', 'cell_size': '100', 't0': '10-01-2010',
-                   't': '10-01-2011', 'threshold': '5', 'del_t': '24', 'x': '-117.141284', 'y': '34.12128',
+        'Plunge': {'simulation_name': 'Plunge_demo', 'USGS_gage': '11055500', 'cell_size': '100', 't0': '10-01-2000',
+                   't': '10-15-2000', 'threshold': '5', 'del_t': '24', 'x': '-117.141284', 'y': '34.12128',
                    # 'ymax':'34.2336', 'xmax': '-117.048046', 'ymin': '34.10883', 'xmin': '-117.168289',
-                   'ymax': '34.23', 'xmax': '-117.1', 'ymin': '34.10883', 'xmin': '-117.2',
+                   'ymax': '34.22', 'xmax': '-117.084475', 'ymin': '34.116', 'xmin': '-117.165',
                    'init_soil_percentsat': '30'
                    },
 
@@ -1331,9 +1331,9 @@ def check_status(request):
             # # delete these please
             # try:
             #     inputs_dictionary = app_utils.create_model_input_dict_from_request(request, user_name)
-            #     json_data = app_utils.create_topnet_inputs(inputs_dictionary, OAuthHS)
+            #     json_data = app_utils.call_createandrunTOPKAPI(inputs_dictionary, OAuthHS)
             # except Exception,e:
-            #     textfile = open('/home/ubuntuvm/CreateandrunTOPNET_error.html', 'w')
+            #     textfile = open('/home/ubuntuvm/CreateandrunTOPKAPI_error.html', 'w')
             #     textfile.write(str(e))
             #     textfile.close()
             # stop
